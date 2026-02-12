@@ -1,0 +1,24 @@
+@import "tailwindcss";
+
+@theme {
+  --color-x-blue: #1d9bf0;
+  --color-x-bg: #000000;
+  --color-x-card: #16181c;
+  --color-x-border: #2f3336;
+  --color-x-text: #e7e9ea;
+  --color-x-text-secondary: #71767b;
+  --color-x-hover: #1d1f23;
+  --color-x-link-card: #1a1c20;
+}
+
+@layer base {
+  html,
+  body,
+  #root {
+    @apply min-h-dvh;
+  }
+
+  body {
+    @apply bg-x-bg text-x-text antialiased;
+  }
+}

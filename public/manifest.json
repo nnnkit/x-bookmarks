@@ -1,0 +1,38 @@
+{
+  "manifest_version": 3,
+  "name": "X Bookmarks Tab",
+  "version": "1.0.0",
+  "description": "View your X/Twitter bookmarks on every new tab",
+  "permissions": [
+    "cookies",
+    "storage",
+    "webRequest",
+    "declarativeNetRequest",
+    "tabs"
+  ],
+  "host_permissions": [
+    "https://x.com/*"
+  ],
+  "content_scripts": [
+    {
+      "matches": ["https://x.com/*"],
+      "js": ["content/detect-user.js"],
+      "run_at": "document_start"
+    }
+  ],
+  "background": {
+    "service_worker": "service-worker.js"
+  },
+  "chrome_url_overrides": {
+    "newtab": "newtab.html"
+  },
+  "declarative_net_request": {
+    "rule_resources": [
+      {
+        "id": "rules",
+        "enabled": true,
+        "path": "rules.json"
+      }
+    ]
+  }
+}
