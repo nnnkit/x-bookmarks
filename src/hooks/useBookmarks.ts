@@ -13,6 +13,7 @@ import {
   getAllBookmarks,
   clearBookmarks,
   deleteBookmarksByTweetIds,
+  cleanupOldTweetDetails,
 } from "../db";
 
 interface UseBookmarksReturn {
@@ -21,6 +22,10 @@ interface UseBookmarksReturn {
   refresh: () => void;
   unbookmark: (tweetId: string) => Promise<void>;
 }
+
+const WEEKLY_DB_CLEANUP_KEY = "tw_db_weekly_cleanup_at";
+const WEEK_MS = 1000 * 60 * 60 * 24 * 7;
+const DETAIL_CACHE_RETENTION_MS = 1000 * 60 * 60 * 24 * 30;
 
 function compareSortIndexDesc(a: Bookmark, b: Bookmark): number {
   return b.sortIndex.localeCompare(a.sortIndex);
@@ -75,6 +80,22 @@ export function useBookmarks(isReady: boolean): UseBookmarksReturn {
   useEffect(() => {
     bookmarksRef.current = bookmarks;
   }, [bookmarks]);
+
+  // Keep detail cache bounded while preserving saved bookmark records.
+  useEffect(() => {
+    const runCleanup = async () => {
+      try {
+        const stored = await chrome.storage.local.get([WEEKLY_DB_CLEANUP_KEY]);
+        const lastCleanup = Number(stored[WEEKLY_DB_CLEANUP_KEY] || 0);
+        if (Date.now() - lastCleanup < WEEK_MS) return;
+
+        await cleanupOldTweetDetails(DETAIL_CACHE_RETENTION_MS);
+        await chrome.storage.local.set({ [WEEKLY_DB_CLEANUP_KEY]: Date.now() });
+      } catch {}
+    };
+
+    runCleanup().catch(() => {});
+  }, []);
 
   // Load from IndexedDB on mount
   useEffect(() => {

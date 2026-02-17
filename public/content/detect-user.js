@@ -3,17 +3,45 @@
 (function () {
   const MESSAGE_SOURCE = "xbt-bookmark-mutation";
 
-  const cookies = document.cookie.split(";");
-  for (const item of cookies) {
-    const [key, value] = item.trim().split("=");
-    if (key === "twid" && value) {
-      // twid cookie format: u%3D<numeric_user_id>
-      const userId = value.replace("u%3D", "");
-      if (userId) {
-        chrome.storage.local.set({ current_user_id: userId });
+  function parseTwidUserId(rawValue) {
+    if (typeof rawValue !== "string" || !rawValue) return null;
+
+    const candidates = [rawValue];
+    try {
+      const decoded = decodeURIComponent(rawValue);
+      if (decoded && decoded !== rawValue) {
+        candidates.push(decoded);
       }
-      break;
+    } catch {}
+
+    for (const candidate of candidates) {
+      const trimmed = candidate.trim();
+      if (!trimmed) continue;
+
+      const userMatch = trimmed.match(/u=(\d+)/);
+      if (userMatch?.[1]) return userMatch[1];
+
+      const encodedMatch = trimmed.match(/u%3[Dd](\d+)/);
+      if (encodedMatch?.[1]) return encodedMatch[1];
+
+      if (/^\d+$/.test(trimmed)) return trimmed;
     }
+
+    return null;
+  }
+
+  const twidPair = document.cookie
+    .split(";")
+    .map((item) => item.trim())
+    .find((item) => item.startsWith("twid="));
+  const twidRawValue = twidPair ? twidPair.slice("twid=".length) : "";
+  const currentUserId = parseTwidUserId(twidRawValue);
+
+  if (currentUserId) {
+    chrome.storage.local.set({ current_user_id: currentUserId });
+  } else {
+    // Keep IndexedDB bookmarks, but drop stale auth identity on logout.
+    chrome.storage.local.remove(["current_user_id"]);
   }
 
   function handleBookmarkMutationMessage(event) {

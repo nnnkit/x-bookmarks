@@ -157,3 +157,23 @@ export async function getTweetDetailCache(
   const cached = await db.get(DETAIL_STORE_NAME, tweetId);
   return cached || null;
 }
+
+export async function cleanupOldTweetDetails(maxAgeMs: number): Promise<number> {
+  if (!Number.isFinite(maxAgeMs) || maxAgeMs <= 0) return 0;
+
+  const cutoff = Date.now() - maxAgeMs;
+  const db = await getDb();
+  const tx = db.transaction(DETAIL_STORE_NAME, "readwrite");
+  const fetchedAtIndex = tx.store.index("fetchedAt");
+
+  let removed = 0;
+  let cursor = await fetchedAtIndex.openCursor(IDBKeyRange.upperBound(cutoff));
+  while (cursor) {
+    await cursor.delete();
+    removed += 1;
+    cursor = await cursor.continue();
+  }
+
+  await tx.done;
+  return removed;
+}

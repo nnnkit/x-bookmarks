@@ -1,17 +1,61 @@
 @import "tailwindcss";
 
 @theme {
-  --color-x-blue: #1d9bf0;
-  --color-x-bg: #000000;
-  --color-x-card: #16181c;
-  --color-x-border: #2f3336;
-  --color-x-text: #e7e9ea;
-  --color-x-text-secondary: #71767b;
-  --color-x-hover: #1d1f23;
-  --color-x-link-card: #1a1c20;
+  --color-x-blue: var(--x-blue);
+  --color-x-bg: var(--x-bg);
+  --color-x-card: var(--x-card);
+  --color-x-border: var(--x-border);
+  --color-x-text: var(--x-text);
+  --color-x-text-secondary: var(--x-text-secondary);
+  --color-x-hover: var(--x-hover);
+  --color-x-link-card: var(--x-link-card);
+  --color-x-reader-surface: var(--x-reader-surface);
+  --color-x-reader-border: var(--x-reader-border);
 }
 
 @layer base {
+  :root,
+  [data-theme="light"] {
+    --x-blue: #1f6f5a;
+    --x-bg: #f3f1e8;
+    --x-card: #fffdf8;
+    --x-border: #ddd6c7;
+    --x-text: #1c1a16;
+    --x-text-secondary: #6b6558;
+    --x-hover: #efe9db;
+    --x-link-card: #f7f2e6;
+    --x-reader-surface: #fffcf4;
+    --x-reader-border: #e5dcc8;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --x-blue: #4db693;
+      --x-bg: #11140f;
+      --x-card: #191d17;
+      --x-border: #2b3127;
+      --x-text: #edf0e7;
+      --x-text-secondary: #9ca694;
+      --x-hover: #232820;
+      --x-link-card: #171b16;
+      --x-reader-surface: #171c16;
+      --x-reader-border: #2d3529;
+    }
+  }
+
+  [data-theme="dark"] {
+    --x-blue: #4db693;
+    --x-bg: #11140f;
+    --x-card: #191d17;
+    --x-border: #2b3127;
+    --x-text: #edf0e7;
+    --x-text-secondary: #9ca694;
+    --x-hover: #232820;
+    --x-link-card: #171b16;
+    --x-reader-surface: #171c16;
+    --x-reader-border: #2d3529;
+  }
+
   html,
   body,
   #root {
@@ -20,5 +64,380 @@
 
   body {
     @apply bg-x-bg text-x-text antialiased;
+    text-rendering: optimizeLegibility;
+    font-family:
+      "Avenir Next", "Avenir", "Segoe UI", "Helvetica Neue", Helvetica,
+      sans-serif;
+  }
+
+  .home-display {
+    font-family:
+      "Iowan Old Style", "Palatino Linotype", "Book Antiqua", Palatino, serif;
+  }
+
+  ::selection {
+    background-color: color-mix(in srgb, var(--x-blue) 28%, transparent);
+  }
+
+  /* Scroll offset for ToC anchor targets */
+  [id^="section-"] {
+    scroll-margin-top: 5rem;
+  }
+
+  .reader-heading {
+    scroll-margin-top: 5rem;
+  }
+}
+
+.breath-home {
+  --breath-bg: #111110;
+  --breath-surface: rgba(255, 255, 255, 0.02);
+  --breath-surface-hover: rgba(255, 255, 255, 0.04);
+  --breath-border: rgba(255, 255, 255, 0.06);
+  --breath-border-strong: rgba(255, 255, 255, 0.12);
+  --breath-text-primary: rgba(255, 255, 255, 0.86);
+  --breath-text-secondary: rgba(255, 255, 255, 0.72);
+  --breath-text-muted: rgba(255, 255, 255, 0.36);
+  --breath-text-ghost: rgba(255, 255, 255, 0.2);
+  --breath-accent: #e07a5f;
+  --breath-accent-muted: rgba(224, 122, 95, 0.78);
+  --breath-accent-bg: rgba(224, 122, 95, 0.12);
+  background: var(--breath-bg);
+  color: var(--breath-text-primary);
+  font-family:
+    "DM Sans", "Avenir Next", "Avenir", "Segoe UI", "Helvetica Neue",
+    Helvetica, sans-serif;
+}
+
+.breath-ambient {
+  background:
+    radial-gradient(
+      circle at 50% 45%,
+      rgba(224, 122, 95, 0.08) 0%,
+      rgba(224, 122, 95, 0.02) 30%,
+      transparent 65%
+    ),
+    linear-gradient(180deg, rgba(0, 0, 0, 0.32) 0%, transparent 40%);
+}
+
+.breath-clock,
+.breath-title,
+.breath-pick-title,
+.breath-list-title,
+.breath-item-title {
+  font-family:
+    "Cormorant Garamond", "Iowan Old Style", "Palatino Linotype", Georgia,
+    serif;
+}
+
+.breath-clock {
+  color: var(--breath-text-primary);
+  font-size: clamp(3rem, 9vw, 5.8rem);
+  font-weight: 300;
+  letter-spacing: -0.04em;
+  line-height: 1;
+}
+
+.breath-icon-btn {
+  border: 1px solid var(--breath-border);
+  border-radius: 9999px;
+  color: var(--breath-text-muted);
+  background: rgba(255, 255, 255, 0.02);
+  padding: 0.46rem;
+  transition:
+    border-color 180ms ease,
+    color 180ms ease,
+    background-color 180ms ease;
+}
+
+.breath-icon-btn:hover {
+  border-color: var(--breath-border-strong);
+  color: var(--breath-text-secondary);
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.breath-card,
+.breath-panel {
+  border: 1px solid var(--breath-border);
+  border-radius: 1.1rem;
+  background: var(--breath-surface);
+  backdrop-filter: blur(2px);
+}
+
+.breath-card {
+  position: relative;
+  overflow: hidden;
+  padding: 1.35rem 1.5rem 1.1rem;
+  transition:
+    border-color 180ms ease,
+    background-color 180ms ease;
+}
+
+.breath-card:hover,
+.breath-card.is-engaged {
+  border-color: var(--breath-border-strong);
+  background: var(--breath-surface-hover);
+}
+
+.breath-progress-track {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 2px;
+  background: rgba(255, 255, 255, 0.04);
+  overflow: hidden;
+}
+
+.breath-progress-fill {
+  display: block;
+  width: 100%;
+  height: 100%;
+  transform-origin: left center;
+  background: linear-gradient(
+    90deg,
+    rgba(224, 122, 95, 0.68),
+    rgba(224, 122, 95, 0.22)
+  );
+}
+
+.breath-card-content {
+  transform: translateY(0);
+  opacity: 1;
+  transition:
+    transform 200ms ease,
+    opacity 200ms ease;
+}
+
+.breath-card-content--leaving {
+  transform: translateY(4px);
+  opacity: 0;
+}
+
+.breath-eyebrow {
+  color: var(--breath-accent-muted);
+  font-size: 0.68rem;
+  font-weight: 600;
+  letter-spacing: 0.26em;
+  text-transform: uppercase;
+}
+
+.breath-title {
+  color: var(--breath-text-secondary);
+  font-size: clamp(1.45rem, 4vw, 2rem);
+  line-height: 1.28;
+  font-weight: 400;
+}
+
+.breath-meta {
+  color: var(--breath-text-muted);
+  font-size: 0.78rem;
+  line-height: 1.2;
+}
+
+.breath-dot {
+  width: 1rem;
+  height: 0.26rem;
+  border-radius: 9999px;
+  transform: scaleX(0.26);
+  transform-origin: center;
+  background: rgba(255, 255, 255, 0.15);
+  transition:
+    transform 180ms ease,
+    background-color 180ms ease;
+}
+
+.breath-dot.is-active {
+  transform: scaleX(1);
+  background: var(--breath-accent);
+}
+
+.breath-actions {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.8rem;
+}
+
+.breath-link {
+  border: none;
+  background: none;
+  color: var(--breath-text-ghost);
+  font-size: 0.8rem;
+  cursor: pointer;
+  transition: color 180ms ease;
+}
+
+.breath-link:hover {
+  color: rgba(255, 255, 255, 0.52);
+}
+
+.breath-divider {
+  color: rgba(255, 255, 255, 0.14);
+}
+
+.breath-panel {
+  padding: 1.5rem 1.4rem;
+}
+
+.breath-pick-title {
+  color: var(--breath-text-primary);
+  font-size: clamp(1.8rem, 5vw, 2.5rem);
+  line-height: 1.26;
+  font-weight: 400;
+}
+
+.breath-pick-excerpt {
+  color: rgba(255, 255, 255, 0.48);
+  font-size: 0.96rem;
+  line-height: 1.62;
+}
+
+.breath-btn {
+  border-radius: 0.62rem;
+  font-size: 0.79rem;
+  font-weight: 600;
+  line-height: 1;
+  cursor: pointer;
+  transition:
+    opacity 180ms ease,
+    color 180ms ease,
+    border-color 180ms ease,
+    background-color 180ms ease;
+}
+
+.breath-btn:disabled {
+  opacity: 0.56;
+  cursor: default;
+}
+
+.breath-btn--primary {
+  border: none;
+  background: var(--breath-accent);
+  color: white;
+  padding: 0.68rem 1.28rem;
+}
+
+.breath-btn--primary:hover:not(:disabled) {
+  opacity: 0.9;
+}
+
+.breath-btn--secondary {
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.06);
+  color: rgba(255, 255, 255, 0.62);
+  padding: 0.68rem 1.28rem;
+}
+
+.breath-btn--secondary:hover:not(:disabled) {
+  color: rgba(255, 255, 255, 0.88);
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+.breath-btn--ghost {
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.04);
+  color: rgba(255, 255, 255, 0.54);
+  padding: 0.68rem 1rem;
+}
+
+.breath-btn--ghost:hover:not(:disabled) {
+  color: rgba(255, 255, 255, 0.8);
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+.breath-btn--compact {
+  font-size: 0.74rem;
+  padding: 0.44rem 0.68rem;
+}
+
+.breath-list-title {
+  color: var(--breath-text-primary);
+  font-size: 1.32rem;
+  font-weight: 400;
+}
+
+.breath-list-item {
+  width: 100%;
+  border: none;
+  background: transparent;
+  display: flex;
+  align-items: center;
+  gap: 0.95rem;
+  padding: 0.78rem 0;
+  cursor: pointer;
+  transition: opacity 180ms ease;
+}
+
+.breath-list-item:hover .breath-item-title {
+  color: rgba(255, 255, 255, 0.95);
+}
+
+.breath-list-item--read {
+  opacity: 0.42;
+}
+
+.breath-time-badge {
+  min-width: 2rem;
+  height: 2rem;
+  border-radius: 0.5rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--breath-accent);
+  font-size: 0.75rem;
+  font-weight: 600;
+  background: var(--breath-accent-bg);
+  flex-shrink: 0;
+}
+
+.breath-list-item--read .breath-time-badge {
+  color: rgba(255, 255, 255, 0.4);
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.breath-item-title {
+  display: -webkit-box;
+  overflow: hidden;
+  color: var(--breath-text-secondary);
+  font-size: 1rem;
+  line-height: 1.25;
+  font-weight: 400;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+
+.breath-empty {
+  color: rgba(255, 255, 255, 0.5);
+  font-size: 0.95rem;
+}
+
+@media (max-width: 768px) {
+  .breath-panel {
+    padding: 1.1rem 1rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .breath-card {
+    padding: 1.15rem 1rem 0.9rem;
+  }
+
+  .breath-title {
+    font-size: 1.45rem;
+  }
+
+  .breath-actions {
+    gap: 0.55rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .breath-card-content,
+  .breath-dot,
+  .breath-link,
+  .breath-btn,
+  .breath-icon-btn {
+    transition: none !important;
   }
 }

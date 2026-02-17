@@ -28,11 +28,34 @@ export interface TweetUrl {
   expandedUrl: string;
 }
 
+export interface ArticleContentBlock {
+  type: string;
+  text: string;
+  inlineStyleRanges: Array<{ offset: number; length: number; style: string }>;
+  entityRanges: Array<{ offset: number; length: number; key: number }>;
+  depth: number;
+}
+
+export interface ArticleContentEntity {
+  type: string;
+  data: Record<string, unknown>;
+}
+
 export interface ArticleContent {
   title?: string;
   plainText: string;
   coverImageUrl?: string;
+  contentBlocks?: ArticleContentBlock[];
+  entityMap?: Record<string, ArticleContentEntity>;
 }
+
+export type TweetKind =
+  | "tweet"
+  | "reply"
+  | "quote"
+  | "repost"
+  | "thread"
+  | "article";
 
 export interface QuotedTweet {
   tweetId: string;
@@ -40,6 +63,8 @@ export interface QuotedTweet {
   createdAt: number;
   author: Author;
   media: Media[];
+  urls?: TweetUrl[];
+  article?: ArticleContent | null;
 }
 
 export interface ThreadTweet {
@@ -50,6 +75,13 @@ export interface ThreadTweet {
   media: Media[];
   urls: TweetUrl[];
   article?: ArticleContent | null;
+  quotedTweet?: QuotedTweet | null;
+  retweetedTweet?: QuotedTweet | null;
+  tweetKind?: TweetKind;
+  tweetDisplayType?: string;
+  inReplyToTweetId?: string;
+  inReplyToScreenName?: string;
+  isThread?: boolean;
 }
 
 export interface Bookmark {
@@ -68,7 +100,12 @@ export interface Bookmark {
   hasLink: boolean;
   isLongText: boolean;
   quotedTweet: QuotedTweet | null;
+  retweetedTweet?: QuotedTweet | null;
   article?: ArticleContent | null;
+  tweetKind?: TweetKind;
+  tweetDisplayType?: string;
+  inReplyToTweetId?: string;
+  inReplyToScreenName?: string;
 }
 
 export interface TweetDetailCache {
@@ -89,4 +126,15 @@ export interface SyncState {
   phase: "idle" | "checking" | "syncing" | "done" | "error";
   total: number;
   error?: string;
+}
+
+export type WidgetStyle = "stack" | "swiper" | "filmstrip";
+export type WallpaperSource = "bing" | "wikimedia";
+
+export interface UserSettings {
+  showBookmarkStack: boolean;
+  stackSize: number;
+  showTopSites: boolean;
+  widgetStyle: WidgetStyle;
+  wallpaperSource: WallpaperSource;
 }

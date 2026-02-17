@@ -1,17 +1,28 @@
 import { useState, useMemo, useEffect, useCallback } from "react";
 import { useAuth } from "./hooks/useAuth";
 import { useBookmarks } from "./hooks/useBookmarks";
+import { useTheme } from "./hooks/useTheme";
+import { useSettings } from "./hooks/useSettings";
+import { useKeyboardNavigation } from "./hooks/useKeyboard";
+import { pickRelatedBookmarks } from "./lib/related";
 import { exportGraphqlDocs } from "./api/twitter";
 import { Onboarding } from "./components/Onboarding";
+import { NewTabHome } from "./components/NewTabHome";
 import { SearchBar } from "./components/SearchBar";
 import { BookmarkCard } from "./components/BookmarkCard";
 import { ReaderView } from "./components/ReaderView";
+import { SettingsModal } from "./components/SettingsModal";
 import type { Bookmark } from "./types";
+
+type AppView = "home" | "library";
 
 export default function App() {
   const { phase } = useAuth();
+  const { themePreference, setThemePreference } = useTheme();
+  const { settings, updateSettings } = useSettings();
   const isReady = phase === "ready";
   const { bookmarks, syncState, refresh, unbookmark } = useBookmarks(isReady);
+  const [view, setView] = useState<AppView>("home");
   const [searchQuery, setSearchQuery] = useState("");
   const [focusedIndex, setFocusedIndex] = useState(-1);
   const [selectedBookmark, setSelectedBookmark] = useState<Bookmark | null>(
@@ -20,6 +31,8 @@ export default function App() {
   const [exportingDocs, setExportingDocs] = useState(false);
   const [unbookmarkingId, setUnbookmarkingId] = useState<string | null>(null);
   const [headerMessage, setHeaderMessage] = useState<string | null>(null);
+  const [settingsOpen, setSettingsOpen] = useState(false);
+  const [shuffleSeed, setShuffleSeed] = useState(0);
 
   const filteredBookmarks = useMemo(() => {
     if (!searchQuery.trim()) return bookmarks;
@@ -45,6 +58,11 @@ export default function App() {
       setSelectedBookmark(null);
     }
   }, [bookmarks, selectedBookmark]);
+
+  const relatedBookmarks = useMemo(
+    () => pickRelatedBookmarks(selectedBookmark, bookmarks, 3, shuffleSeed > 0),
+    [selectedBookmark, bookmarks, shuffleSeed],
+  );
 
   // Scroll focused item into view
   useEffect(() => {
@@ -122,86 +140,20 @@ export default function App() {
     return () => window.clearTimeout(timer);
   }, [headerMessage]);
 
-  // Keyboard navigation
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      const isInput =
-        (e.target as HTMLElement).tagName === "INPUT" ||
-        (e.target as HTMLElement).tagName === "TEXTAREA";
-
-      // Reader view shortcuts
-      if (selectedBookmark) {
-        if (e.key === "Escape") {
-          closeReader();
-          return;
-        }
-        // Navigate between bookmarks in reader
-        if (e.key === "j" || e.key === "ArrowRight") {
-          const idx = filteredBookmarks.findIndex(
-            (b) => b.id === selectedBookmark.id,
-          );
-          if (idx < filteredBookmarks.length - 1) {
-            setSelectedBookmark(filteredBookmarks[idx + 1]);
-          }
-          return;
-        }
-        if (e.key === "k" || e.key === "ArrowLeft") {
-          const idx = filteredBookmarks.findIndex(
-            (b) => b.id === selectedBookmark.id,
-          );
-          if (idx > 0) {
-            setSelectedBookmark(filteredBookmarks[idx - 1]);
-          }
-          return;
-        }
-        return;
-      }
-
-      // List view shortcuts
-      if (e.key === "/" && !isInput) {
-        e.preventDefault();
-        document.getElementById("search-input")?.focus();
-        return;
-      }
-
-      if (e.key === "Escape") {
-        (document.activeElement as HTMLElement)?.blur();
-        setFocusedIndex(-1);
-        return;
-      }
-
-      if (isInput) return;
-
-      if (e.key === "j" || e.key === "ArrowDown") {
-        e.preventDefault();
-        setFocusedIndex((prev) =>
-          prev < filteredBookmarks.length - 1 ? prev + 1 : prev,
-        );
-      } else if (e.key === "k" || e.key === "ArrowUp") {
-        e.preventDefault();
-        setFocusedIndex((prev) => (prev > 0 ? prev - 1 : prev));
-      } else if (
-        (e.key === "Enter" || e.key === "o") &&
-        focusedIndex >= 0
-      ) {
-        openBookmark(filteredBookmarks[focusedIndex]);
-      }
-    };
-
-    document.addEventListener("keydown", handleKeyDown);
-    return () => document.removeEventListener("keydown", handleKeyDown);
-  }, [
+  useKeyboardNavigation({
     selectedBookmark,
     filteredBookmarks,
     focusedIndex,
+    setFocusedIndex,
     openBookmark,
     closeReader,
-  ]);
+    setSelectedBookmark,
+  });
 
   // Loading
   if (phase === "loading") {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-x-bg">
+      <div className="flex items-center justify-center min-h-dvh bg-x-bg">
         <svg
           viewBox="0 0 24 24"
           className="w-12 h-12 text-x-blue animate-pulse"
@@ -218,52 +170,85 @@ export default function App() {
     return <Onboarding phase={phase} />;
   }
 
-  // Syncing with no bookmarks yet
-  if (syncState.phase === "syncing" && bookmarks.length === 0) {
-    return (
-      <div className="flex flex-col items-center justify-center min-h-screen bg-x-bg text-x-text gap-4">
-        <svg
-          viewBox="0 0 24 24"
-          className="w-12 h-12 text-x-blue animate-pulse"
-          fill="currentColor"
-        >
-          <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
-        </svg>
-        <p className="text-lg font-bold">Syncing your bookmarks...</p>
-        <p className="text-x-text-secondary tabular-nums">
-          {syncState.total} found
-        </p>
-      </div>
-    );
-  }
-
   // Reader view
   if (selectedBookmark) {
     return (
-      <ReaderView
-        bookmark={selectedBookmark}
-        onBack={closeReader}
-        onUnbookmark={handleUnbookmark}
-        unbookmarking={unbookmarkingId === selectedBookmark.tweetId}
-      />
+      <>
+        <ReaderView
+          bookmark={selectedBookmark}
+          relatedBookmarks={relatedBookmarks}
+          onOpenBookmark={openBookmark}
+          themePreference={themePreference}
+          onThemePreferenceChange={setThemePreference}
+          onBack={closeReader}
+          onUnbookmark={handleUnbookmark}
+          unbookmarking={unbookmarkingId === selectedBookmark.tweetId}
+          onShuffle={() => setShuffleSeed((s) => s + 1)}
+        />
+        <SettingsModal
+          open={settingsOpen}
+          onClose={() => setSettingsOpen(false)}
+          settings={settings}
+          onUpdateSettings={updateSettings}
+          themePreference={themePreference}
+          onThemePreferenceChange={setThemePreference}
+          bookmarks={bookmarks}
+        />
+      </>
     );
   }
 
-  // Bookmark list
+  // Home screen
+  if (view === "home") {
+    return (
+      <>
+        <NewTabHome
+          bookmarks={bookmarks}
+          syncing={syncState.phase === "syncing"}
+          onSync={refresh}
+          onOpenLibrary={() => setView("library")}
+          onOpenBookmark={openBookmark}
+          onOpenSettings={() => setSettingsOpen(true)}
+        />
+        <SettingsModal
+          open={settingsOpen}
+          onClose={() => setSettingsOpen(false)}
+          settings={settings}
+          onUpdateSettings={updateSettings}
+          themePreference={themePreference}
+          onThemePreferenceChange={setThemePreference}
+          bookmarks={bookmarks}
+        />
+      </>
+    );
+  }
+
+  // Bookmarks library
   return (
-    <div className="min-h-screen bg-x-bg text-x-text">
+    <div className="min-h-dvh bg-x-bg text-x-text">
       <SearchBar
         query={searchQuery}
         onQueryChange={setSearchQuery}
         onRefresh={refresh}
         onExportApiDocs={exportApiDocs}
+        onOpenSettings={() => setSettingsOpen(true)}
         syncing={syncState.phase === "syncing"}
         exportingDocs={exportingDocs}
         bookmarkCount={filteredBookmarks.length}
+        onBack={() => setView("home")}
+      />
+      <SettingsModal
+        open={settingsOpen}
+        onClose={() => setSettingsOpen(false)}
+        settings={settings}
+        onUpdateSettings={updateSettings}
+        themePreference={themePreference}
+        onThemePreferenceChange={setThemePreference}
+        bookmarks={bookmarks}
       />
 
       {headerMessage && (
-        <div className="max-w-2xl mx-auto px-4 pt-3">
+        <div className="max-w-3xl mx-auto px-4 pt-3">
           <div className="bg-x-card border border-x-border text-x-text rounded-xl px-4 py-2.5 text-sm">
             {headerMessage}
           </div>
@@ -272,7 +257,7 @@ export default function App() {
 
       {/* Error banner */}
       {syncState.phase === "error" && (
-        <div className="max-w-2xl mx-auto px-4 pt-3">
+        <div className="max-w-3xl mx-auto px-4 pt-3">
           <div className="flex items-center justify-between bg-red-900/30 border border-red-800 text-red-200 rounded-xl px-4 py-2.5 text-sm">
             <span>
               {syncState.error === "reconnecting"
@@ -291,7 +276,7 @@ export default function App() {
         </div>
       )}
 
-      <main className="max-w-2xl mx-auto">
+      <main className="max-w-3xl mx-auto">
         {bookmarks.length === 0 && syncState.phase === "done" && (
           <div className="flex flex-col items-center justify-center py-20 text-center px-4">
             <svg
@@ -317,7 +302,7 @@ export default function App() {
             </div>
           )}
 
-        <div className="divide-y divide-x-border">
+        <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 px-4 pb-6 pt-4">
           {filteredBookmarks.map((bookmark, i) => (
             <BookmarkCard
               key={bookmark.id}

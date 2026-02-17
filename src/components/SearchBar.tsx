@@ -3,9 +3,11 @@ interface SearchBarProps {
   onQueryChange: (query: string) => void;
   onRefresh: () => void;
   onExportApiDocs: () => void;
+  onOpenSettings: () => void;
   syncing: boolean;
   exportingDocs: boolean;
   bookmarkCount: number;
+  onBack?: () => void;
 }
 
 export function SearchBar({
@@ -13,13 +15,26 @@ export function SearchBar({
   onQueryChange,
   onRefresh,
   onExportApiDocs,
+  onOpenSettings,
   syncing,
   exportingDocs,
   bookmarkCount,
+  onBack,
 }: SearchBarProps) {
   return (
     <div className="sticky top-0 z-10 bg-x-bg/80 backdrop-blur-md border-b border-x-border">
-      <div className="max-w-2xl mx-auto px-4 py-3 flex items-center gap-4">
+      <div className="max-w-3xl mx-auto px-4 py-3 flex items-center gap-4">
+        {onBack && (
+          <button
+            onClick={onBack}
+            aria-label="Back to home"
+            className="p-2 -ml-2 text-x-text-secondary hover:text-x-text hover:bg-x-hover rounded-full transition-colors"
+          >
+            <svg viewBox="0 0 24 24" className="w-5 h-5" fill="currentColor">
+              <path d="M7.414 13l5.043 5.04-1.414 1.42L3.586 12l7.457-7.46 1.414 1.42L7.414 11H21v2H7.414z" />
+            </svg>
+          </button>
+        )}
         <svg viewBox="0 0 24 24" className="w-7 h-7 text-x-blue shrink-0" fill="currentColor">
           <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
         </svg>
@@ -59,6 +74,17 @@ export function SearchBar({
         >
           <svg viewBox="0 0 24 24" className="w-5 h-5" fill="currentColor">
             <path d="M14 2H6.5A2.5 2.5 0 0 0 4 4.5v15A2.5 2.5 0 0 0 6.5 22h11a2.5 2.5 0 0 0 2.5-2.5V8zm0 2.44L18.56 9H14zM6.5 4H12v6.5h6V19.5a.5.5 0 0 1-.5.5h-11a.5.5 0 0 1-.5-.5v-15a.5.5 0 0 1 .5-.5z" />
+          </svg>
+        </button>
+
+        <button
+          onClick={onOpenSettings}
+          aria-label="Open settings"
+          className="p-2 text-x-text-secondary hover:text-x-blue hover:bg-x-blue/10 rounded-full transition-colors"
+          title="Settings"
+        >
+          <svg viewBox="0 0 24 24" className="w-5 h-5" fill="currentColor">
+            <path d="M12 15.5A3.5 3.5 0 018.5 12 3.5 3.5 0 0112 8.5a3.5 3.5 0 013.5 3.5 3.5 3.5 0 01-3.5 3.5m7.43-2.53c.04-.32.07-.64.07-.97s-.03-.66-.07-1l2.11-1.63c.19-.15.24-.42.12-.64l-2-3.46c-.12-.22-.39-.3-.61-.22l-2.49 1c-.52-.4-1.08-.73-1.69-.98l-.38-2.65C14.46 2.18 14.25 2 14 2h-4c-.25 0-.46.18-.49.42l-.38 2.65c-.61.25-1.17.59-1.69.98l-2.49-1c-.23-.09-.49 0-.61.22l-2 3.46c-.13.22-.07.49.12.64L4.57 11c-.04.34-.07.67-.07 1s.03.65.07.97l-2.11 1.66c-.19.15-.25.42-.12.64l2 3.46c.12.22.39.3.61.22l2.49-1.01c.52.4 1.08.73 1.69.98l.38 2.65c.03.24.24.42.49.42h4c.25 0 .46-.18.49-.42l.38-2.65c.61-.25 1.17-.58 1.69-.98l2.49 1.01c.22.08.49 0 .61-.22l2-3.46c.12-.22.07-.49-.12-.64l-2.11-1.66z" />
           </svg>
         </button>
 

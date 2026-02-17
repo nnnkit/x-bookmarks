@@ -20,12 +20,14 @@ export function useAuth(): UseAuthReturn {
       setUserId(status.userId);
 
       if (!status.hasUser) {
+        captureStarted.current = false;
         setPhase("need_login");
         return;
       }
 
       if (status.hasAuth && status.hasQueryId) {
         // Fully connected — close background tab if still open
+        captureStarted.current = false;
         closeAuthTab();
         setPhase("ready");
         return;
@@ -41,6 +43,7 @@ export function useAuth(): UseAuthReturn {
         setTimeout(doCheck, 500);
       }
     } catch {
+      captureStarted.current = false;
       setPhase("need_login");
     }
   }, []);

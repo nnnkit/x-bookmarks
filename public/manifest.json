@@ -8,10 +8,13 @@
     "storage",
     "webRequest",
     "declarativeNetRequest",
-    "tabs"
+    "tabs",
+    "topSites"
   ],
   "host_permissions": [
-    "https://x.com/*"
+    "https://x.com/*",
+    "https://www.bing.com/*",
+    "https://en.wikipedia.org/*"
   ],
   "content_scripts": [
     {
