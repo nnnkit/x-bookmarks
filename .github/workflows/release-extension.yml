@@ -1,0 +1,64 @@
+name: Release Extension ZIP
+
+on:
+  push:
+    tags:
+      - "v*.*.*"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  release-extension:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build extension
+        run: pnpm build
+
+      - name: Package extension ZIP
+        run: node scripts/package-extension.mjs
+
+      - name: Read manifest version
+        id: manifest
+        run: echo "version=$(node -e \"console.log(JSON.parse(require('node:fs').readFileSync('dist/manifest.json', 'utf8')).version)\")" >> "$GITHUB_OUTPUT"
+
+      - name: Validate tag version
+        if: startsWith(github.ref, 'refs/tags/')
+        run: |
+          TAG_VERSION="${GITHUB_REF_NAME#v}"
+          if [ "$TAG_VERSION" != "${{ steps.manifest.outputs.version }}" ]; then
+            echo "Tag version (v$TAG_VERSION) does not match manifest version (${{ steps.manifest.outputs.version }})."
+            exit 1
+          fi
+
+      - name: Upload artifact (manual runs)
+        if: github.event_name == 'workflow_dispatch'
+        uses: actions/upload-artifact@v4
+        with:
+          name: x-bookmarks-tab-v${{ steps.manifest.outputs.version }}
+          path: release/*.zip
+
+      - name: Publish GitHub Release asset
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: softprops/action-gh-release@v2
+        with:
+          generate_release_notes: true
+          files: release/*.zip

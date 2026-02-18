@@ -6,7 +6,8 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc && vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "package:extension": "pnpm build && node scripts/package-extension.mjs"
   },
   "dependencies": {
     "idb": "^8.0.3",
