@@ -64,6 +64,9 @@ export function SettingsModal({
     <div
       ref={backdropRef}
       className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="settings-title"
       onClick={(e) => {
         if (e.target === backdropRef.current) onClose();
       }}
@@ -71,7 +74,7 @@ export function SettingsModal({
       <div className="max-w-md mx-auto mt-[15vh] rounded-3xl border border-x-border bg-x-card shadow-2xl">
         {/* Header */}
         <div className="flex items-center justify-between px-6 pt-6 pb-4">
-          <h2 className="text-xl font-bold text-x-text">Settings</h2>
+          <h2 id="settings-title" className="text-xl font-bold text-x-text">Settings</h2>
           <button
             type="button"
             onClick={onClose}
@@ -116,6 +119,33 @@ export function SettingsModal({
             <div className="space-y-3">
               <label className="flex items-center justify-between cursor-pointer">
                 <span className="text-sm text-x-text">
+                  Show search bar
+                </span>
+                <button
+                  type="button"
+                  role="switch"
+                  aria-checked={settings.showSearchBar}
+                  onClick={() =>
+                    onUpdateSettings({
+                      showSearchBar: !settings.showSearchBar,
+                    })
+                  }
+                  className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+                    settings.showSearchBar ? "bg-x-blue" : "bg-x-border"
+                  }`}
+                >
+                  <span
+                    className={`inline-block size-4 rounded-full bg-white transition-transform ${
+                      settings.showSearchBar
+                        ? "translate-x-6"
+                        : "translate-x-1"
+                    }`}
+                  />
+                </button>
+              </label>
+
+              <label className="flex items-center justify-between cursor-pointer">
+                <span className="text-sm text-x-text">
                   Show quick links
                 </span>
                 <button
@@ -140,6 +170,29 @@ export function SettingsModal({
                   />
                 </button>
               </label>
+
+              {settings.showTopSites && (
+                <div className="flex items-center justify-between pl-4">
+                  <span className="text-sm text-x-text-secondary">
+                    Max quick links
+                  </span>
+                  <select
+                    value={settings.topSitesLimit}
+                    onChange={(e) =>
+                      onUpdateSettings({
+                        topSitesLimit: Number(e.target.value),
+                      })
+                    }
+                    className="rounded-lg border border-x-border bg-x-bg px-2.5 py-1.5 text-sm text-x-text focus:border-x-blue focus:outline-none transition-colors"
+                  >
+                    {[3, 4, 5, 6, 8, 10].map((n) => (
+                      <option key={n} value={n}>
+                        {n}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )}
 
             </div>
           </section>

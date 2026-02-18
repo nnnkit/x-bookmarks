@@ -140,4 +140,6 @@ export interface ReadingProgress {
 
 export interface UserSettings {
   showTopSites: boolean;
+  showSearchBar: boolean;
+  topSitesLimit: number;
 }

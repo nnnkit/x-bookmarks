@@ -4,7 +4,7 @@ export {
   closeAuthTab,
   checkReauthStatus,
   type ReauthStatus,
-} from "./core/auth";
+} from "./auth";
 
 export {
   fetchBookmarkPage,
@@ -13,4 +13,6 @@ export {
   ackBookmarkEvents,
   type BookmarkChangeType,
   type BookmarkChangeEvent,
-} from "./core/bookmarks";
+} from "./bookmarks";
+
+export { fetchTweetDetail, fetchThread } from "./posts";

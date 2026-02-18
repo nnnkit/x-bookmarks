@@ -9,6 +9,10 @@ function mediaHeightClass(total: number, index: number): string {
 export function TweetMedia({ items }: { items: Media[] }) {
   if (items.length === 0) return null;
 
+  const prefersReducedMotion =
+    typeof window !== "undefined" &&
+    window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
+
   const columns = items.length === 1 ? "grid-cols-1" : "grid-cols-2";
   const visible = items.slice(0, 4);
 
@@ -26,7 +30,7 @@ export function TweetMedia({ items }: { items: Media[] }) {
                 src={item.videoUrl}
                 controls
                 loop={item.type === "animated_gif"}
-                autoPlay={item.type === "animated_gif"}
+                autoPlay={item.type === "animated_gif" && !prefersReducedMotion}
                 muted={item.type === "animated_gif"}
                 playsInline
                 className={`w-full bg-black object-contain ${heightClass}`}

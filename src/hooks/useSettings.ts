@@ -1,19 +1,14 @@
 import { useEffect, useState } from "react";
 import type { UserSettings } from "../types";
+import { hasChromeStorageSync, hasChromeStorageOnChanged } from "../lib/chrome";
 
 const SETTINGS_KEY = "ui_settings";
 
 const DEFAULT_SETTINGS: UserSettings = {
   showTopSites: false,
+  showSearchBar: true,
+  topSitesLimit: 5,
 };
-
-function hasChromeStorageSync() {
-  return typeof chrome !== "undefined" && Boolean(chrome.storage?.sync);
-}
-
-function hasChromeStorageOnChanged() {
-  return typeof chrome !== "undefined" && Boolean(chrome.storage?.onChanged);
-}
 
 function normalizeSettings(value: unknown): UserSettings {
   if (!value || typeof value !== "object") return DEFAULT_SETTINGS;
@@ -23,6 +18,16 @@ function normalizeSettings(value: unknown): UserSettings {
       typeof raw.showTopSites === "boolean"
         ? raw.showTopSites
         : DEFAULT_SETTINGS.showTopSites,
+    showSearchBar:
+      typeof raw.showSearchBar === "boolean"
+        ? raw.showSearchBar
+        : DEFAULT_SETTINGS.showSearchBar,
+    topSitesLimit:
+      typeof raw.topSitesLimit === "number" &&
+      raw.topSitesLimit >= 1 &&
+      raw.topSitesLimit <= 10
+        ? raw.topSitesLimit
+        : DEFAULT_SETTINGS.topSitesLimit,
   };
 }
 

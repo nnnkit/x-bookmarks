@@ -9,10 +9,6 @@ import type {
   TweetUrl,
 } from "../types";
 import {
-  getTweetDetailCache,
-  upsertTweetDetailCache,
-} from "../db";
-import {
   type UnknownRecord,
   asRecord,
   asRecords,
@@ -39,8 +35,6 @@ export interface TweetDetailContent {
   focalTweet: Bookmark | null;
   thread: ThreadTweet[];
 }
-
-const DETAIL_CACHE_TTL_MS = 1000 * 60 * 60 * 6;
 
 function parseUrlMappings(
   entities: UnknownRecord | null,
@@ -97,9 +91,9 @@ function parseMedia(legacy: UnknownRecord): Media[] {
         );
 
         if (variants.length > 0) {
-          const sortedVariants = variants
-            .slice()
-            .sort((a, b) => toNumber(a.bitrate) - toNumber(b.bitrate));
+          const sortedVariants = variants.toSorted(
+            (a, b) => toNumber(a.bitrate) - toNumber(b.bitrate),
+          );
           const best = sortedVariants[sortedVariants.length - 1];
           item.videoUrl = asString(best?.url) || undefined;
         }
@@ -293,11 +287,11 @@ function extractContentBlocks(
       if (!key || !value) continue;
       const entityType = asString(value.type);
       if (!entityType) continue;
-      const data = (asRecord(value.data) || {}) as Record<string, unknown>;
+      let data = (asRecord(value.data) || {}) as Record<string, unknown>;
       // Resolve MEDIA entities to image URLs
       if (entityType === "MEDIA" && mediaUrlMap.size > 0) {
         const imageUrl = resolveMediaEntityUrl(data, mediaUrlMap);
-        if (imageUrl) data.imageUrl = imageUrl;
+        if (imageUrl) data = { ...data, imageUrl };
       }
       entityMap[key] = { type: entityType, data };
     }
@@ -309,10 +303,10 @@ function extractContentBlocks(
         if (!entity) continue;
         const entityType = asString(entity.type);
         if (!entityType) continue;
-        const data = (asRecord(entity.data) || {}) as Record<string, unknown>;
+        let data = (asRecord(entity.data) || {}) as Record<string, unknown>;
         if (entityType === "MEDIA" && mediaUrlMap.size > 0) {
           const imageUrl = resolveMediaEntityUrl(data, mediaUrlMap);
-          if (imageUrl) data.imageUrl = imageUrl;
+          if (imageUrl) data = { ...data, imageUrl };
         }
         entityMap[key] = { type: entityType, data };
       }
@@ -673,23 +667,14 @@ function parseTweetRecord(
   }
 }
 
-interface FetchResult {
+export interface BookmarkPageResult {
   bookmarks: Bookmark[];
   cursor: string | null;
 }
 
-export async function fetchBookmarkPage(
-  cursor?: string,
-): Promise<FetchResult> {
-  const response = await chrome.runtime.sendMessage({
-    type: "FETCH_BOOKMARKS",
-    cursor,
-  });
-
-  if (response.error) throw new Error(response.error);
-
+export function parseBookmarkPagePayload(payload: unknown): BookmarkPageResult {
   const timeline = asRecord(
-    asRecord(asRecord(response.data)?.data)?.bookmark_timeline_v2,
+    asRecord(asRecord(payload)?.data)?.bookmark_timeline_v2,
   )?.timeline;
   const timelineRecord = asRecord(timeline);
   if (!timelineRecord) return { bookmarks: [], cursor: null };
@@ -825,63 +810,20 @@ function toThreadTweet(bookmark: Bookmark): ThreadTweet {
   };
 }
 
-export async function fetchTweetDetail(
+export function parseTweetDetailPayload(
+  payload: unknown,
   tweetId: string,
-): Promise<TweetDetailContent> {
-  const cached = await getTweetDetailCache(tweetId).catch(() => null);
-  const cacheAge = cached ? Date.now() - cached.fetchedAt : Number.POSITIVE_INFINITY;
-  const isCacheFresh = Boolean(cached && cacheAge <= DETAIL_CACHE_TTL_MS);
-
-  if (isCacheFresh && cached) {
-    return {
-      focalTweet: cached.focalTweet,
-      thread: cached.thread,
-    };
-  }
-
-  let response;
-  try {
-    response = await chrome.runtime.sendMessage({
-      type: "FETCH_TWEET_DETAIL",
-      tweetId,
-    });
-  } catch (error) {
-    if (cached) {
-      return {
-        focalTweet: cached.focalTweet,
-        thread: cached.thread,
-      };
-    }
-    throw error;
-  }
-
-  if (response.error) {
-    if (cached) {
-      return {
-        focalTweet: cached.focalTweet,
-        thread: cached.thread,
-      };
-    }
-    throw new Error(response.error);
-  }
-
-  const responseData = asRecord(response.data);
+): TweetDetailContent {
+  const responseData = asRecord(payload);
   const directTweetResult = asRecord(
     asRecord(asRecord(responseData?.data)?.tweetResult)?.result,
   );
-  const timelineTweets = parseDetailTimelineTweets(response.data);
+  const timelineTweets = parseDetailTimelineTweets(payload);
   if (timelineTweets.length === 0) {
     if (directTweetResult) {
       const parsed = parseTweetRecord(directTweetResult);
       if (parsed) {
-        const detail: TweetDetailContent = { focalTweet: parsed.bookmark, thread: [] };
-        await upsertTweetDetailCache({
-          tweetId,
-          fetchedAt: Date.now(),
-          focalTweet: detail.focalTweet,
-          thread: detail.thread,
-        }).catch(() => {});
-        return detail;
+        return { focalTweet: parsed.bookmark, thread: [] };
       }
     }
     return { focalTweet: null, thread: [] };
@@ -922,21 +864,5 @@ export async function fetchTweetDetail(
     focalTweet,
     thread,
   };
-  await upsertTweetDetailCache({
-    tweetId,
-    fetchedAt: Date.now(),
-    focalTweet: detail.focalTweet,
-    thread: detail.thread,
-  }).catch(() => {});
-
   return detail;
-}
-
-export async function fetchThread(tweetId: string): Promise<ThreadTweet[]> {
-  try {
-    const detail = await fetchTweetDetail(tweetId);
-    return detail.thread;
-  } catch {
-    return [];
-  }
 }

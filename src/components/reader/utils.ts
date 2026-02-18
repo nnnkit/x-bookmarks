@@ -7,6 +7,11 @@ export { compactPreview, normalizeText, truncateLabel } from "../../lib/text";
 export const baseTweetTextClass =
   "break-words [&_a]:text-x-blue [&_a:hover]:underline";
 
+function sanitizeUrl(url: string): string {
+  if (/^https?:\/\//i.test(url)) return url;
+  return "";
+}
+
 const URL_REGEX = /https?:\/\/[^\s<]+/g;
 const URL_TOKEN_REGEX = /__URL_TOKEN_(\d+)__/g;
 const MENTION_REGEX =
@@ -29,7 +34,8 @@ export function escapeHtml(text: string): string {
   return text
     .replace(/&/g, "&amp;")
     .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;");
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;");
 }
 
 export function textClassForMode(
@@ -184,7 +190,7 @@ export function renderBlockInlineContent(
       if (seg.entityKey >= 0) {
         const entity = entityMap[String(seg.entityKey)];
         if (entity?.type === "LINK") {
-          const url = String(entity.data?.url || "");
+          const url = sanitizeUrl(String(entity.data?.url || ""));
           if (url) {
             html = `<a href="${escapeHtml(url)}" target="_blank" rel="noopener noreferrer">${html}</a>`;
           }
@@ -218,7 +224,7 @@ export function linkifyText(text: string): string {
   const withUrlTokens = escaped.replace(URL_REGEX, (url) => {
     const token = `__URL_TOKEN_${urlTokens.length}__`;
     urlTokens.push(
-      `<a href="${url}" target="_blank" rel="noopener noreferrer">${url}</a>`,
+      `<a href="${sanitizeUrl(url)}" target="_blank" rel="noopener noreferrer">${url}</a>`,
     );
     return token;
   });

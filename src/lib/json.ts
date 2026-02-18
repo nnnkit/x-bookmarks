@@ -19,6 +19,10 @@ export function asString(value: unknown): string | null {
   return typeof value === "string" ? value : null;
 }
 
+export function asStringOrEmpty(value: unknown): string {
+  return typeof value === "string" ? value : "";
+}
+
 export function toNumber(value: unknown): number {
   if (typeof value === "number") return Number.isFinite(value) ? value : 0;
   if (typeof value === "string") {

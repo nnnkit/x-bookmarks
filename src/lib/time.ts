@@ -20,10 +20,3 @@ export function formatClock(value: Date): string {
   });
 }
 
-export function formatFullDate(value: Date): string {
-  return value.toLocaleDateString("en-US", {
-    weekday: "long",
-    month: "long",
-    day: "numeric",
-  });
-}

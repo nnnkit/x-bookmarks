@@ -1,3 +1,4 @@
+import { useEffect, useMemo, useRef, useState } from "react";
 import type { Bookmark } from "../types";
 import type { ContinueReadingItem } from "../hooks/useContinueReading";
 import { compactPreview } from "../lib/text";
@@ -78,6 +79,8 @@ export function ReadingView({
   onBack,
 }: ReadingViewProps) {
   const containerWidthClass = "max-w-3xl";
+  const [focusedIndex, setFocusedIndex] = useState(-1);
+  const itemRefs = useRef<(HTMLButtonElement | null)[]>([]);
 
   const inProgress = continueReadingItems.filter(
     (item) => !item.progress.completed,
@@ -85,6 +88,51 @@ export function ReadingView({
   const completed = continueReadingItems.filter(
     (item) => item.progress.completed,
   );
+
+  const allBookmarks = useMemo(
+    () => [
+      ...inProgress.map((item) => item.bookmark),
+      ...completed.map((item) => item.bookmark),
+      ...unreadBookmarks,
+    ],
+    [inProgress, completed, unreadBookmarks],
+  );
+
+  useEffect(() => {
+    if (focusedIndex >= 0 && focusedIndex < itemRefs.current.length) {
+      itemRefs.current[focusedIndex]?.scrollIntoView({ block: "nearest" });
+    }
+  }, [focusedIndex]);
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      const tag = (e.target as HTMLElement).tagName;
+      if (tag === "INPUT" || tag === "TEXTAREA") return;
+
+      if (e.key === "j" || e.key === "ArrowDown") {
+        e.preventDefault();
+        setFocusedIndex((prev) =>
+          prev < allBookmarks.length - 1 ? prev + 1 : prev,
+        );
+      } else if (e.key === "k" || e.key === "ArrowUp") {
+        e.preventDefault();
+        setFocusedIndex((prev) => (prev > 0 ? prev - 1 : prev));
+      } else if (
+        (e.key === "Enter" || e.key === "o") &&
+        focusedIndex >= 0 &&
+        focusedIndex < allBookmarks.length
+      ) {
+        onOpenBookmark(allBookmarks[focusedIndex]);
+      } else if (e.key === "Escape") {
+        onBack();
+      }
+    };
+
+    document.addEventListener("keydown", handleKeyDown);
+    return () => document.removeEventListener("keydown", handleKeyDown);
+  }, [focusedIndex, allBookmarks, onOpenBookmark, onBack]);
+
+  let itemIndex = 0;
 
   return (
     <div className="min-h-dvh bg-x-bg">
@@ -114,12 +162,15 @@ export function ReadingView({
               Continue Reading
             </h2>
             <div className="space-y-2">
-              {inProgress.map(({ bookmark, progress }) => (
+              {inProgress.map(({ bookmark, progress }) => {
+                const idx = itemIndex++;
+                return (
                 <button
                   key={bookmark.tweetId}
+                  ref={(el) => { itemRefs.current[idx] = el; }}
                   type="button"
                   onClick={() => onOpenBookmark(bookmark)}
-                  className="flex w-full items-center gap-3 rounded-xl border border-x-border bg-x-card p-3 text-left transition-colors hover:bg-x-hover"
+                  className={`flex w-full items-center gap-3 rounded-xl border p-3 text-left transition-colors hover:bg-x-hover ${focusedIndex === idx ? "border-x-blue ring-2 ring-x-blue/40 bg-x-hover" : "border-x-border bg-x-card"}`}
                 >
                   <img
                     src={bookmark.author.profileImageUrl}
@@ -147,7 +198,8 @@ export function ReadingView({
                     </p>
                   </div>
                 </button>
-              ))}
+                );
+              })}
             </div>
           </section>
         )}
@@ -159,12 +211,15 @@ export function ReadingView({
               Completed
             </h2>
             <div className="space-y-2">
-              {completed.map(({ bookmark, progress }) => (
+              {completed.map(({ bookmark, progress }) => {
+                const idx = itemIndex++;
+                return (
                 <button
                   key={bookmark.tweetId}
+                  ref={(el) => { itemRefs.current[idx] = el; }}
                   type="button"
                   onClick={() => onOpenBookmark(bookmark)}
-                  className="flex w-full items-center gap-3 rounded-xl border border-x-border bg-x-card p-3 text-left opacity-70 transition-colors hover:bg-x-hover hover:opacity-100"
+                  className={`flex w-full items-center gap-3 rounded-xl border p-3 text-left transition-colors ${focusedIndex === idx ? "border-x-blue ring-2 ring-x-blue/40 bg-x-hover opacity-100" : "border-x-border bg-x-card opacity-70 hover:bg-x-hover hover:opacity-100"}`}
                 >
                   <img
                     src={bookmark.author.profileImageUrl}
@@ -182,7 +237,8 @@ export function ReadingView({
                     </p>
                   </div>
                 </button>
-              ))}
+                );
+              })}
             </div>
           </section>
         )}
@@ -194,12 +250,15 @@ export function ReadingView({
               Unread
             </h2>
             <div className="space-y-2">
-              {unreadBookmarks.map((bookmark) => (
+              {unreadBookmarks.map((bookmark) => {
+                const idx = itemIndex++;
+                return (
                 <button
                   key={bookmark.tweetId}
+                  ref={(el) => { itemRefs.current[idx] = el; }}
                   type="button"
                   onClick={() => onOpenBookmark(bookmark)}
-                  className="flex w-full items-center gap-3 rounded-xl border border-x-border bg-x-card p-3 text-left transition-colors hover:bg-x-hover"
+                  className={`flex w-full items-center gap-3 rounded-xl border p-3 text-left transition-colors hover:bg-x-hover ${focusedIndex === idx ? "border-x-blue ring-2 ring-x-blue/40 bg-x-hover" : "border-x-border bg-x-card"}`}
                 >
                   <img
                     src={bookmark.author.profileImageUrl}
@@ -219,7 +278,8 @@ export function ReadingView({
                     </p>
                   </div>
                 </button>
-              ))}
+                );
+              })}
             </div>
           </section>
         )}

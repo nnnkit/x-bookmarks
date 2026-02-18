@@ -1,17 +1,10 @@
 import { useEffect, useMemo, useState } from "react";
+import { hasChromeStorageSync, hasChromeStorageOnChanged } from "../lib/chrome";
 
 export type ThemePreference = "system" | "light" | "dark";
 export type ResolvedTheme = "light" | "dark";
 
 const THEME_PREFERENCE_KEY = "ui_theme_preference";
-
-function hasChromeStorageSync() {
-  return typeof chrome !== "undefined" && Boolean(chrome.storage?.sync);
-}
-
-function hasChromeStorageOnChanged() {
-  return typeof chrome !== "undefined" && Boolean(chrome.storage?.onChanged);
-}
 
 function getSystemTheme(): ResolvedTheme {
   if (typeof window === "undefined" || typeof window.matchMedia !== "function") {

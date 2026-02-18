@@ -1,13 +1,13 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import type { Bookmark, SyncState } from "../types";
 import {
-  fetchBookmarkPage,
   checkReauthStatus,
   checkAuth,
   deleteBookmark,
   getBookmarkEvents,
   ackBookmarkEvents,
-} from "../api/twitter";
+  fetchBookmarkPage,
+} from "../api/core";
 import {
   upsertBookmarks,
   getAllBookmarks,
@@ -42,8 +42,8 @@ function reconcileTopWindow(
   previous: Bookmark[],
   incoming: Bookmark[],
 ): { merged: Bookmark[]; deletedTweetIds: string[] } {
-  const incomingSorted = [...incoming].sort(compareSortIndexDesc);
-  const previousSorted = [...previous].sort(compareSortIndexDesc);
+  const incomingSorted = incoming.toSorted(compareSortIndexDesc);
+  const previousSorted = previous.toSorted(compareSortIndexDesc);
   const incomingIds = new Set(incomingSorted.map((bookmark) => bookmark.tweetId));
 
   const previousTopWindow = previousSorted.slice(0, incomingSorted.length);
@@ -62,7 +62,7 @@ function reconcileTopWindow(
   }
 
   return {
-    merged: Array.from(mergedByTweetId.values()).sort(compareSortIndexDesc),
+    merged: Array.from(mergedByTweetId.values()).toSorted(compareSortIndexDesc),
     deletedTweetIds,
   };
 }
@@ -76,6 +76,7 @@ export function useBookmarks(isReady: boolean): UseBookmarksReturn {
   const syncingRef = useRef(false);
   const processingBookmarkEventsRef = useRef(false);
   const bookmarksRef = useRef<Bookmark[]>([]);
+  const reauthPollRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   useEffect(() => {
     bookmarksRef.current = bookmarks;
@@ -133,7 +134,7 @@ export function useBookmarks(isReady: boolean): UseBookmarksReturn {
         }
         nextTotal = 0;
       } else if (incomingSignature !== currentSignature) {
-        const incomingSorted = [...incoming].sort(compareSortIndexDesc);
+        const incomingSorted = incoming.toSorted(compareSortIndexDesc);
         const { merged, deletedTweetIds } = reconcileTopWindow(current, incomingSorted);
 
         await upsertBookmarks(incomingSorted);
@@ -157,15 +158,20 @@ export function useBookmarks(isReady: boolean): UseBookmarksReturn {
           error: "reconnecting",
         });
 
+        if (reauthPollRef.current !== null) {
+          clearInterval(reauthPollRef.current);
+        }
+
         let attempts = 0;
-        const pollInterval = setInterval(async () => {
+        reauthPollRef.current = setInterval(async () => {
           attempts++;
           try {
             const status = await checkReauthStatus();
             if (!status.inProgress) {
               const auth = await checkAuth();
               if (auth.hasAuth && auth.hasQueryId) {
-                clearInterval(pollInterval);
+                clearInterval(reauthPollRef.current!);
+                reauthPollRef.current = null;
                 syncingRef.current = false;
                 doSync();
                 return;
@@ -173,7 +179,8 @@ export function useBookmarks(isReady: boolean): UseBookmarksReturn {
             }
           } catch {}
           if (attempts >= 15) {
-            clearInterval(pollInterval);
+            clearInterval(reauthPollRef.current!);
+            reauthPollRef.current = null;
             setSyncState({
               phase: "error",
               total: bookmarksRef.current.length,
@@ -273,7 +280,7 @@ export function useBookmarks(isReady: boolean): UseBookmarksReturn {
         await upsertBookmarks([removedBookmark]);
         setBookmarks((prev) => {
           if (prev.some((bookmark) => bookmark.tweetId === tweetId)) return prev;
-          return [removedBookmark, ...prev].sort(compareSortIndexDesc);
+          return [removedBookmark, ...prev].toSorted(compareSortIndexDesc);
         });
       }
       throw error;
@@ -320,6 +327,14 @@ export function useBookmarks(isReady: boolean): UseBookmarksReturn {
       chrome.storage.onChanged.removeListener(onStorageChange);
     };
   }, [isReady, applyBookmarkEvents]);
+
+  useEffect(() => {
+    return () => {
+      if (reauthPollRef.current !== null) {
+        clearInterval(reauthPollRef.current);
+      }
+    };
+  }, []);
 
   return { bookmarks, syncState, refresh, unbookmark };
 }

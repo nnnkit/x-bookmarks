@@ -1,23 +1,21 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import type { AuthStatus } from "../types";
-import { checkAuth, startAuthCapture, closeAuthTab } from "../api/twitter";
+import { checkAuth, startAuthCapture, closeAuthTab } from "../api/core/auth";
 
 type AuthPhase = "loading" | "need_login" | "connecting" | "ready";
 
 interface UseAuthReturn {
   phase: AuthPhase;
-  userId: string | null;
 }
 
 export function useAuth(): UseAuthReturn {
   const [phase, setPhase] = useState<AuthPhase>("loading");
-  const [userId, setUserId] = useState<string | null>(null);
   const captureStarted = useRef(false);
+  const recheckTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const doCheck = useCallback(async () => {
     try {
       const status: AuthStatus = await checkAuth();
-      setUserId(status.userId);
 
       if (!status.hasUser) {
         captureStarted.current = false;
@@ -40,7 +38,7 @@ export function useAuth(): UseAuthReturn {
         captureStarted.current = true;
         startAuthCapture();
         // Quick 500ms check after starting capture
-        setTimeout(doCheck, 500);
+        recheckTimer.current = setTimeout(doCheck, 500);
       }
     } catch {
       captureStarted.current = false;
@@ -51,6 +49,11 @@ export function useAuth(): UseAuthReturn {
   // Initial check
   useEffect(() => {
     doCheck();
+    return () => {
+      if (recheckTimer.current !== null) {
+        clearTimeout(recheckTimer.current);
+      }
+    };
   }, [doCheck]);
 
   // React to storage changes (content script sets user_id, service worker sets auth)
@@ -75,5 +78,5 @@ export function useAuth(): UseAuthReturn {
     return () => clearInterval(interval);
   }, [phase, doCheck]);
 
-  return { phase, userId };
+  return { phase };
 }

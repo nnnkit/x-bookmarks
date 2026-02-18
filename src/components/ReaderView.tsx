@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import type { Bookmark } from "../types";
-import { fetchTweetDetail } from "../api/twitter";
+import { fetchTweetDetail } from "../api/core/posts";
 import type { ThemePreference } from "../hooks/useTheme";
 
 import { resolveTweetKind } from "./reader/utils";

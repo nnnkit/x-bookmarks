@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
+import { asRecord, asStringOrEmpty } from "../lib/json";
 
 interface WallpaperImage {
   url: string;
@@ -31,30 +32,21 @@ function todayLocal(): string {
   return `${year}-${month}-${day}`;
 }
 
-function toRecord(value: unknown): Record<string, unknown> | null {
-  if (!value || typeof value !== "object") return null;
-  return value as Record<string, unknown>;
-}
-
-function toString(value: unknown): string {
-  return typeof value === "string" ? value : "";
-}
-
 function normalizeCache(value: unknown): WallpaperGalleryCache | null {
-  const record = toRecord(value);
+  const record = asRecord(value);
   if (!record) return null;
 
-  const cachedAt = toString(record.cachedAt);
+  const cachedAt = asStringOrEmpty(record.cachedAt);
   if (!cachedAt) return null;
 
   const rawImages = Array.isArray(record.images) ? record.images : [];
   const images: WallpaperImage[] = rawImages
     .map((img) => {
-      const r = toRecord(img);
+      const r = asRecord(img);
       if (!r) return null;
-      const url = toString(r.url);
+      const url = asStringOrEmpty(r.url);
       if (!url) return null;
-      return { url, title: toString(r.title) };
+      return { url, title: asStringOrEmpty(r.title) };
     })
     .filter((img): img is WallpaperImage => img !== null);
 
@@ -101,18 +93,18 @@ async function fetchBingGallery(): Promise<WallpaperGalleryCache> {
   });
   if (!res.ok) throw new Error(`Bing API ${res.status}`);
 
-  const data = toRecord(await res.json());
+  const data = asRecord(await res.json());
   const rawImages = Array.isArray(data?.images) ? data.images : [];
 
   const images: WallpaperImage[] = rawImages
     .map((img) => {
-      const record = toRecord(img);
+      const record = asRecord(img);
       if (!record) return null;
-      const rawUrl = toString(record.url);
+      const rawUrl = asStringOrEmpty(record.url);
       if (!rawUrl) return null;
       return {
         url: rawUrl.startsWith("http") ? rawUrl : `https://www.bing.com${rawUrl}`,
-        title: toString(record.copyright) || "Bing daily wallpaper",
+        title: asStringOrEmpty(record.copyright) || "Bing daily wallpaper",
       };
     })
     .filter((img): img is WallpaperImage => img !== null);

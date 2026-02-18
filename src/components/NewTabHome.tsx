@@ -15,6 +15,7 @@ interface NewTabHomeProps {
   bookmarks: Bookmark[];
   syncing: boolean;
   showTopSites: boolean;
+  topSitesLimit: number;
   onSync: () => void;
   onOpenBookmark: (bookmark: Bookmark) => void;
   onOpenSettings: () => void;
@@ -35,7 +36,6 @@ const READ_IDS_KEY = "tw_breath_read_ids";
 const MAX_ROTATION_ITEMS = 5;
 const ROTATION_INTERVAL_MS = 30000;
 const TRANSITION_MS = 220;
-const PROGRESS_TICK_MS = 50;
 
 function formatSavedLabel(timestamp: number, nowMs: number): string {
   const diffMs = nowMs - timestamp;
@@ -77,6 +77,30 @@ function persistReadIds(value: Set<string>) {
   localStorage.setItem(READ_IDS_KEY, JSON.stringify(Array.from(value)));
 }
 
+const BOOKMARK_ICON = (
+  <svg viewBox="0 0 24 24" className="size-5" fill="currentColor">
+    <path d="M4 4.5C4 3.12 5.119 2 6.5 2h11C18.881 2 20 3.12 20 4.5v18.44l-8-5.71-8 5.71V4.5zM6.5 4c-.276 0-.5.22-.5.5v14.56l6-4.29 6 4.29V4.5c0-.28-.224-.5-.5-.5h-11z" />
+  </svg>
+);
+
+const SETTINGS_ICON = (
+  <svg viewBox="0 0 24 24" className="size-5" fill="currentColor">
+    <path d="M12 15.5A3.5 3.5 0 018.5 12 3.5 3.5 0 0112 8.5a3.5 3.5 0 013.5 3.5 3.5 3.5 0 01-3.5 3.5m7.43-2.53c.04-.32.07-.64.07-.97s-.03-.66-.07-1l2.11-1.63c.19-.15.24-.42.12-.64l-2-3.46c-.12-.22-.39-.3-.61-.22l-2.49 1c-.52-.4-1.08-.73-1.69-.98l-.38-2.65C14.46 2.18 14.25 2 14 2h-4c-.25 0-.46.18-.49.42l-.38 2.65c-.61.25-1.17.59-1.69.98l-2.49-1c-.23-.09-.49 0-.61.22l-2 3.46c-.13.22-.07.49.12.64L4.57 11c-.04.34-.07.67-.07 1s.03.65.07.97l-2.11 1.66c-.19.15-.25.42-.12.64l2 3.46c.12.22.39.3.61.22l2.49-1.01c.52.4 1.08.73 1.69.98l.38 2.65c.03.24.24.42.49.42h4c.25 0 .46-.18.49-.42l.38-2.65c.61-.25 1.17-.58 1.69-.98l2.49 1.01c.22.08.49 0 .61-.22l2-3.46c.12-.22.07-.49-.12-.64l-2.11-1.66z" />
+  </svg>
+);
+
+const CHEVRON_LEFT_ICON = (
+  <svg viewBox="0 0 20 20" fill="currentColor" className="size-3.5">
+    <path fillRule="evenodd" d="M11.78 5.22a.75.75 0 0 1 0 1.06L8.06 10l3.72 3.72a.75.75 0 1 1-1.06 1.06l-4.25-4.25a.75.75 0 0 1 0-1.06l4.25-4.25a.75.75 0 0 1 1.06 0Z" clipRule="evenodd" />
+  </svg>
+);
+
+const CHEVRON_RIGHT_ICON = (
+  <svg viewBox="0 0 20 20" fill="currentColor" className="size-3.5">
+    <path fillRule="evenodd" d="M8.22 5.22a.75.75 0 0 1 1.06 0l4.25 4.25a.75.75 0 0 1 0 1.06l-4.25 4.25a.75.75 0 0 1-1.06-1.06L11.94 10 8.22 6.28a.75.75 0 0 1 0-1.06Z" clipRule="evenodd" />
+  </svg>
+);
+
 function usePrefersReducedMotion() {
   const [prefersReducedMotion, setPrefersReducedMotion] = useState(false);
 
@@ -100,6 +124,7 @@ export function NewTabHome({
   bookmarks,
   syncing,
   showTopSites,
+  topSitesLimit,
   onSync,
   onOpenBookmark,
   onOpenSettings,
@@ -113,35 +138,31 @@ export function NewTabHome({
   );
   const [readIds, setReadIds] = useState<Set<string>>(() => loadReadIds());
   const [currentIndex, setCurrentIndex] = useState(0);
-  const [progressMs, setProgressMs] = useState(0);
   const [cardEngaged, setCardEngaged] = useState(false);
   const [cardTransitioning, setCardTransitioning] = useState(false);
   const transitionTimerRef = useRef<number | null>(null);
   const currentIndexRef = useRef(0);
   const prefersReducedMotion = usePrefersReducedMotion();
   const { wallpaperUrl, wallpaperTitle, hasNext, hasPrev, next: nextWallpaper, prev: prevWallpaper } = useWallpaper();
-  const { sites: topSites } = useTopSites();
+  const { sites: topSites } = useTopSites(topSitesLimit);
 
-  const items = useMemo<DecoratedBookmark[]>(
-    () =>
-      bookmarks.map((bookmark) => ({
-        bookmark,
-        title: pickTitle(bookmark),
-        excerpt: pickExcerpt(bookmark),
-        category: inferCategory(bookmark),
-        savedLabel: formatSavedLabel(bookmark.createdAt, now.getTime()),
-        minutes: hasReliableReadingTime(bookmark)
-          ? estimateReadingMinutes(bookmark)
-          : null,
-        isRead: readIds.has(bookmark.tweetId),
-      })),
-    [bookmarks, now, readIds],
-  );
+  const nowMinute = useMemo(() => Math.floor(now.getTime() / 60000), [now]);
 
-  const unreadItems = useMemo(
-    () => items.filter((item) => !item.isRead),
-    [items],
-  );
+  const { items, unreadItems } = useMemo(() => {
+    const allItems: DecoratedBookmark[] = bookmarks.map((bookmark) => ({
+      bookmark,
+      title: pickTitle(bookmark),
+      excerpt: pickExcerpt(bookmark),
+      category: inferCategory(bookmark),
+      savedLabel: formatSavedLabel(bookmark.createdAt, nowMinute * 60000),
+      minutes: hasReliableReadingTime(bookmark)
+        ? estimateReadingMinutes(bookmark)
+        : null,
+      isRead: readIds.has(bookmark.tweetId),
+    }));
+    const unread = allItems.filter((item) => !item.isRead);
+    return { items: allItems, unreadItems: unread };
+  }, [bookmarks, nowMinute, readIds]);
 
   const rotationPool = useMemo(
     () =>
@@ -217,10 +238,6 @@ export function NewTabHome({
     [],
   );
 
-  useEffect(() => {
-    setProgressMs(0);
-  }, [currentIndex, rotationPool.length]);
-
   const currentItem = rotationPool[currentIndex] ?? null;
 
   const markAsRead = useCallback((tweetId: string) => {
@@ -274,23 +291,32 @@ export function NewTabHome({
   useEffect(() => {
     if (rotationPaused) return;
 
-    const timer = window.setInterval(() => {
-      setProgressMs((previous) => {
-        const next = previous + PROGRESS_TICK_MS;
-        if (next >= ROTATION_INTERVAL_MS) {
-          switchCard(currentIndexRef.current + 1);
-          return 0;
-        }
-        return next;
-      });
-    }, PROGRESS_TICK_MS);
+    const timer = window.setTimeout(() => {
+      switchCard(currentIndexRef.current + 1);
+    }, ROTATION_INTERVAL_MS);
 
-    return () => window.clearInterval(timer);
-  }, [rotationPaused, switchCard]);
+    return () => window.clearTimeout(timer);
+  }, [rotationPaused, switchCard, currentIndex]);
 
-  const progressPercent = prefersReducedMotion
-    ? 0
-    : Math.min(100, Math.round((progressMs / ROTATION_INTERVAL_MS) * 100));
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      const tag = (e.target as HTMLElement).tagName;
+      if (tag === "INPUT" || tag === "TEXTAREA") return;
+
+      if (e.key === "ArrowLeft") {
+        switchCard(currentIndex - 1);
+      } else if (e.key === "ArrowRight") {
+        switchCard(currentIndex + 1);
+      } else if (e.key === "Enter") {
+        openForReading(currentItem);
+      } else if (e.key === "l") {
+        onOpenReading();
+      }
+    };
+
+    document.addEventListener("keydown", handleKeyDown);
+    return () => document.removeEventListener("keydown", handleKeyDown);
+  }, [currentIndex, currentItem, switchCard, openForReading, onOpenReading]);
 
   return (
     <div className="breath-home relative min-h-dvh overflow-hidden">
@@ -390,11 +416,11 @@ export function NewTabHome({
                       role="progressbar"
                       aria-valuemin={0}
                       aria-valuemax={100}
-                      aria-valuenow={progressPercent}
+                      aria-valuenow={rotationPaused ? 0 : undefined}
                     >
                       <span
-                        className="breath-progress-fill"
-                        style={{ transform: `scaleX(${progressPercent / 100})` }}
+                        key={currentIndex}
+                        className={`breath-progress-fill${rotationPaused ? "" : " is-animating"}`}
                       />
                     </div>
 
@@ -452,20 +478,11 @@ export function NewTabHome({
                   <div className="breath-actions">
                     <button
                       type="button"
-                      className="breath-link"
-                      onClick={onOpenReading}
-                    >
-                      {bookmarks.length} saved →
-                    </button>
-                    <span aria-hidden className="breath-divider">
-                      |
-                    </span>
-                    <button
-                      type="button"
-                      className="breath-link"
+                      className="breath-btn breath-btn--secondary"
                       onClick={onOpenReading}
                     >
                       Open all bookmarks
+                      <kbd className="breath-kbd">L</kbd>
                     </button>
                   </div>
                 </>
@@ -496,9 +513,7 @@ export function NewTabHome({
           aria-label="Reading progress"
           title="Reading"
         >
-          <svg viewBox="0 0 24 24" className="size-5" fill="currentColor">
-            <path d="M4 4.5C4 3.12 5.119 2 6.5 2h11C18.881 2 20 3.12 20 4.5v18.44l-8-5.71-8 5.71V4.5zM6.5 4c-.276 0-.5.22-.5.5v14.56l6-4.29 6 4.29V4.5c0-.28-.224-.5-.5-.5h-11z" />
-          </svg>
+          {BOOKMARK_ICON}
         </button>
 
         <button
@@ -508,9 +523,7 @@ export function NewTabHome({
           aria-label="Open settings"
           title="Settings"
         >
-          <svg viewBox="0 0 24 24" className="size-5" fill="currentColor">
-            <path d="M12 15.5A3.5 3.5 0 018.5 12 3.5 3.5 0 0112 8.5a3.5 3.5 0 013.5 3.5 3.5 3.5 0 01-3.5 3.5m7.43-2.53c.04-.32.07-.64.07-.97s-.03-.66-.07-1l2.11-1.63c.19-.15.24-.42.12-.64l-2-3.46c-.12-.22-.39-.3-.61-.22l-2.49 1c-.52-.4-1.08-.73-1.69-.98l-.38-2.65C14.46 2.18 14.25 2 14 2h-4c-.25 0-.46.18-.49.42l-.38 2.65c-.61.25-1.17.59-1.69.98l-2.49-1c-.23-.09-.49 0-.61.22l-2 3.46c-.13.22-.07.49.12.64L4.57 11c-.04.34-.07.67-.07 1s.03.65.07.97l-2.11 1.66c-.19.15-.25.42-.12.64l2 3.46c.12.22.39.3.61.22l2.49-1.01c.52.4 1.08.73 1.69.98l.38 2.65c.03.24.24.42.49.42h4c.25 0 .46-.18.49-.42l.38-2.65c.61-.25 1.17-.58 1.69-.98l2.49 1.01c.22.08.49 0 .61-.22l2-3.46c.12-.22.07-.49-.12-.64l-2.11-1.66z" />
-          </svg>
+          {SETTINGS_ICON}
         </button>
 
         {showWallpaper && (
@@ -524,9 +537,7 @@ export function NewTabHome({
                   disabled={!hasPrev}
                   aria-label="Previous wallpaper"
                 >
-                  <svg viewBox="0 0 20 20" fill="currentColor" className="size-3.5">
-                    <path fillRule="evenodd" d="M11.78 5.22a.75.75 0 0 1 0 1.06L8.06 10l3.72 3.72a.75.75 0 1 1-1.06 1.06l-4.25-4.25a.75.75 0 0 1 0-1.06l4.25-4.25a.75.75 0 0 1 1.06 0Z" clipRule="evenodd" />
-                  </svg>
+                  {CHEVRON_LEFT_ICON}
                 </button>
                 <button
                   type="button"
@@ -535,9 +546,7 @@ export function NewTabHome({
                   disabled={!hasNext}
                   aria-label="Next wallpaper"
                 >
-                  <svg viewBox="0 0 20 20" fill="currentColor" className="size-3.5">
-                    <path fillRule="evenodd" d="M8.22 5.22a.75.75 0 0 1 1.06 0l4.25 4.25a.75.75 0 0 1 0 1.06l-4.25 4.25a.75.75 0 0 1-1.06-1.06L11.94 10 8.22 6.28a.75.75 0 0 1 0-1.06Z" clipRule="evenodd" />
-                  </svg>
+                  {CHEVRON_RIGHT_ICON}
                 </button>
               </div>
             )}

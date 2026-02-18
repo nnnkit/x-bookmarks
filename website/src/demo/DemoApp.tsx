@@ -1,26 +1,24 @@
 import { useState, useMemo, useEffect, useCallback } from "react";
-import { useAuth } from "./hooks/useAuth";
-import { useBookmarks } from "./hooks/useBookmarks";
-import { useTheme } from "./hooks/useTheme";
-import { useSettings } from "./hooks/useSettings";
-import { useKeyboardNavigation } from "./hooks/useKeyboard";
-import { pickRelatedBookmarks } from "./lib/related";
-import { Onboarding } from "./components/Onboarding";
-import { NewTabHome } from "./components/NewTabHome";
-import { ReaderView } from "./components/ReaderView";
-import { ReadingView } from "./components/ReadingView";
-import { SettingsModal } from "./components/SettingsModal";
-import { useContinueReading } from "./hooks/useContinueReading";
-import type { Bookmark } from "./types";
+import { useTheme } from "@ext/hooks/useTheme";
+import { useSettings } from "@ext/hooks/useSettings";
+import { useKeyboardNavigation } from "@ext/hooks/useKeyboard";
+import { useContinueReading } from "@ext/hooks/useContinueReading";
+import { pickRelatedBookmarks } from "@ext/lib/related";
+import { NewTabHome } from "@ext/components/NewTabHome";
+import { ReaderView } from "@ext/components/ReaderView";
+import { ReadingView } from "@ext/components/ReadingView";
+import { SettingsModal } from "@ext/components/SettingsModal";
+import { DemoBanner } from "./DemoBanner";
+import { MOCK_BOOKMARKS } from "../mock/bookmarks";
+import { deleteBookmarksByTweetIds } from "@ext/db";
+import type { Bookmark } from "@ext/types";
 
 type AppView = "home" | "reading";
 
-export default function App() {
-  const { phase } = useAuth();
+export default function DemoApp() {
+  const [bookmarks, setBookmarks] = useState<Bookmark[]>(MOCK_BOOKMARKS);
   const { themePreference, setThemePreference } = useTheme();
   const { settings, updateSettings } = useSettings();
-  const isReady = phase === "ready";
-  const { bookmarks, syncState, refresh, unbookmark } = useBookmarks(isReady);
   const {
     continueReading,
     allUnread,
@@ -33,11 +31,12 @@ export default function App() {
   const [unbookmarkingId, setUnbookmarkingId] = useState<string | null>(null);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [shuffleSeed, setShuffleSeed] = useState(0);
+  const [syncing, setSyncing] = useState(false);
 
   useEffect(() => {
     if (!selectedBookmark) return;
     const stillExists = bookmarks.some(
-      (bookmark) => bookmark.tweetId === selectedBookmark.tweetId,
+      (b) => b.tweetId === selectedBookmark.tweetId,
     );
     if (!stillExists) {
       setSelectedBookmark(null);
@@ -45,16 +44,14 @@ export default function App() {
   }, [bookmarks, selectedBookmark]);
 
   const relatedBookmarks = useMemo(
-    () => pickRelatedBookmarks(selectedBookmark, bookmarks, 3, shuffleSeed > 0),
+    () =>
+      pickRelatedBookmarks(selectedBookmark, bookmarks, 3, shuffleSeed > 0),
     [selectedBookmark, bookmarks, shuffleSeed],
   );
 
-  const openBookmark = useCallback(
-    (bookmark: Bookmark) => {
-      setSelectedBookmark(bookmark);
-    },
-    [],
-  );
+  const openBookmark = useCallback((bookmark: Bookmark) => {
+    setSelectedBookmark(bookmark);
+  }, []);
 
   const closeReader = useCallback(() => {
     setSelectedBookmark(null);
@@ -65,20 +62,23 @@ export default function App() {
     async (tweetId: string) => {
       if (!tweetId || unbookmarkingId === tweetId) return;
       setUnbookmarkingId(tweetId);
-
       try {
-        await unbookmark(tweetId);
+        setBookmarks((prev) => prev.filter((b) => b.tweetId !== tweetId));
+        await deleteBookmarksByTweetIds([tweetId]);
         if (selectedBookmark?.tweetId === tweetId) {
           setSelectedBookmark(null);
         }
-      } catch {
-        // ReaderView already renders inline error states for detail fetches.
       } finally {
         setUnbookmarkingId(null);
       }
     },
-    [unbookmark, selectedBookmark, unbookmarkingId],
+    [selectedBookmark, unbookmarkingId],
   );
+
+  const handleSync = useCallback(() => {
+    setSyncing(true);
+    setTimeout(() => setSyncing(false), 1500);
+  }, []);
 
   useKeyboardNavigation({
     selectedBookmark,
@@ -86,28 +86,6 @@ export default function App() {
     closeReader,
     setSelectedBookmark,
   });
-
-  // Loading
-  if (phase === "loading") {
-    return (
-      <div className="flex items-center justify-center min-h-dvh bg-x-bg">
-        <div className="animate-pulse">
-          <svg
-            viewBox="0 0 24 24"
-            className="w-12 h-12 text-x-blue"
-            fill="currentColor"
-          >
-            <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
-          </svg>
-        </div>
-      </div>
-    );
-  }
-
-  // Not logged in or connecting
-  if (phase === "need_login" || phase === "connecting") {
-    return <Onboarding phase={phase} />;
-  }
 
   const mainContent = (() => {
     if (selectedBookmark) {
@@ -138,10 +116,10 @@ export default function App() {
     return (
       <NewTabHome
         bookmarks={bookmarks}
-        syncing={syncState.phase === "syncing"}
+        syncing={syncing}
         showTopSites={settings.showTopSites}
         topSitesLimit={settings.topSitesLimit}
-        onSync={refresh}
+        onSync={handleSync}
         onOpenBookmark={openBookmark}
         onOpenSettings={() => setSettingsOpen(true)}
         onOpenReading={() => setView("reading")}
@@ -151,6 +129,7 @@ export default function App() {
 
   return (
     <>
+      <DemoBanner />
       {mainContent}
       <SettingsModal
         open={settingsOpen}

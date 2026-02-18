@@ -1,6 +1,11 @@
 import { compactPreview } from "./text";
 import type { Bookmark } from "../types";
 
+const AI_REGEX = /\b(ai|llm|gpt|alignment|model)\b/;
+const INDIE_REGEX = /\b(startup|indie|saas|founder|revenue|launch)\b/;
+const ENGINEERING_REGEX = /\b(code|infra|engineering|database|performance)\b/;
+const DESIGN_REGEX = /\b(design|ux|ui|product)\b/;
+
 export function toSingleLine(value: string): string {
   return value.replace(/\s+/g, " ").trim();
 }
@@ -57,11 +62,9 @@ export function inferCategory(bookmark: Bookmark): string {
   if (bookmark.tweetKind === "thread" || bookmark.isThread) return "Thread";
 
   const text = `${bookmark.text} ${bookmark.article?.title ?? ""}`.toLowerCase();
-  if (/\b(ai|llm|gpt|alignment|model)\b/.test(text)) return "AI";
-  if (/\b(startup|indie|saas|founder|revenue|launch)\b/.test(text))
-    return "Indie";
-  if (/\b(code|infra|engineering|database|performance)\b/.test(text))
-    return "Engineering";
-  if (/\b(design|ux|ui|product)\b/.test(text)) return "Product";
+  if (AI_REGEX.test(text)) return "AI";
+  if (INDIE_REGEX.test(text)) return "Indie";
+  if (ENGINEERING_REGEX.test(text)) return "Engineering";
+  if (DESIGN_REGEX.test(text)) return "Product";
   return "Reading";
 }
