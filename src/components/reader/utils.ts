@@ -179,7 +179,7 @@ export function renderBlockInlineContent(
     }
   }
 
-  return segments
+  const raw = segments
     .map((seg) => {
       let html = escapeHtml(seg.text);
       if (seg.entityKey < 0) {
@@ -199,6 +199,8 @@ export function renderBlockInlineContent(
       return html;
     })
     .join("");
+
+  return inlineCode(raw);
 }
 
 function linkifyMentionsAndTags(text: string): string {

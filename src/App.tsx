@@ -20,7 +20,7 @@ export default function App() {
   const { themePreference, setThemePreference } = useTheme();
   const { settings, updateSettings } = useSettings();
   const isReady = phase === "ready";
-  const { bookmarks, syncState, refresh } = useBookmarks(isReady);
+  const { bookmarks, syncState, refresh, unbookmark } = useBookmarks(isReady);
   const detailedTweetIds = useDetailedTweetIds();
   const {
     continueReading,
@@ -54,6 +54,23 @@ export default function App() {
     },
     [],
   );
+
+  const selectedIndex = selectedBookmark
+    ? bookmarks.findIndex((b) => b.id === selectedBookmark.id)
+    : -1;
+  const hasPrev = selectedIndex > 0;
+  const hasNext = selectedIndex >= 0 && selectedIndex < bookmarks.length - 1;
+
+  const goToPrev = useCallback(() => {
+    const idx = bookmarks.findIndex((b) => b.id === selectedBookmark?.id);
+    if (idx > 0) setSelectedBookmark(bookmarks[idx - 1]);
+  }, [bookmarks, selectedBookmark]);
+
+  const goToNext = useCallback(() => {
+    const idx = bookmarks.findIndex((b) => b.id === selectedBookmark?.id);
+    if (idx >= 0 && idx < bookmarks.length - 1)
+      setSelectedBookmark(bookmarks[idx + 1]);
+  }, [bookmarks, selectedBookmark]);
 
   const closeReader = useCallback(() => {
     setSelectedBookmark(null);
@@ -96,6 +113,14 @@ export default function App() {
           onOpenBookmark={openBookmark}
           onBack={closeReader}
           onShuffle={() => setShuffleSeed((s) => s + 1)}
+          onPrev={hasPrev ? goToPrev : undefined}
+          onNext={hasNext ? goToNext : undefined}
+          onUnbookmark={() => {
+            unbookmark(selectedBookmark.tweetId);
+            closeReader();
+          }}
+          themePreference={themePreference}
+          onThemeChange={setThemePreference}
         />
       );
     }

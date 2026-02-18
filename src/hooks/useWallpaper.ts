@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
-import { asRecord, asStringOrEmpty } from "../lib/json";
+import { asStringOrEmpty } from "../lib/json";
 
 interface WallpaperImage {
   url: string;
@@ -22,7 +22,6 @@ export interface UseWallpaperResult {
 }
 
 const STORAGE_KEY = "tw_wallpaper_cache_v5";
-const BING_ENDPOINT = "https://www.bing.com/HPImageArchive.aspx";
 
 function todayLocal(): string {
   const now = new Date();
@@ -33,8 +32,8 @@ function todayLocal(): string {
 }
 
 function normalizeCache(value: unknown): WallpaperGalleryCache | null {
-  const record = asRecord(value);
-  if (!record) return null;
+  if (!value || typeof value !== "object" || Array.isArray(value)) return null;
+  const record = value as Record<string, unknown>;
 
   const cachedAt = asStringOrEmpty(record.cachedAt);
   if (!cachedAt) return null;
@@ -42,8 +41,8 @@ function normalizeCache(value: unknown): WallpaperGalleryCache | null {
   const rawImages = Array.isArray(record.images) ? record.images : [];
   const images: WallpaperImage[] = rawImages
     .map((img) => {
-      const r = asRecord(img);
-      if (!r) return null;
+      if (!img || typeof img !== "object" || Array.isArray(img)) return null;
+      const r = img as Record<string, unknown>;
       const url = asStringOrEmpty(r.url);
       if (!url) return null;
       return { url, title: asStringOrEmpty(r.title) };
@@ -76,45 +75,28 @@ function wallpaperSizeForScreen() {
   return { width, height };
 }
 
-async function fetchBingGallery(): Promise<WallpaperGalleryCache> {
+async function fetchWallpaperViaServiceWorker(): Promise<WallpaperGalleryCache> {
   const { width, height } = wallpaperSizeForScreen();
-  const params = new URLSearchParams({
-    format: "js",
-    idx: "0",
-    n: "8",
-    mkt: "en-US",
-    uhd: "1",
-    uhdwidth: String(width),
-    uhdheight: String(height),
+  const response = await chrome.runtime.sendMessage({
+    type: "FETCH_WALLPAPER",
+    width,
+    height,
   });
 
-  const res = await fetch(`${BING_ENDPOINT}?${params.toString()}`, {
-    cache: "no-store",
-  });
-  if (!res.ok) throw new Error(`Bing API ${res.status}`);
+  if (response?.error) throw new Error(response.error);
 
-  const data = asRecord(await res.json());
-  const rawImages = Array.isArray(data?.images) ? data.images : [];
-
+  const rawImages = Array.isArray(response?.images) ? response.images : [];
   const images: WallpaperImage[] = rawImages
-    .map((img) => {
-      const record = asRecord(img);
-      if (!record) return null;
-      const rawUrl = asStringOrEmpty(record.url);
-      if (!rawUrl) return null;
-      return {
-        url: rawUrl.startsWith("http") ? rawUrl : `https://www.bing.com${rawUrl}`,
-        title: asStringOrEmpty(record.copyright) || "Bing daily wallpaper",
-      };
+    .map((img: Record<string, unknown>) => {
+      const url = asStringOrEmpty(img?.url);
+      if (!url) return null;
+      return { url, title: asStringOrEmpty(img?.title) };
     })
-    .filter((img): img is WallpaperImage => img !== null);
+    .filter((img: WallpaperImage | null): img is WallpaperImage => img !== null);
 
-  if (images.length === 0) throw new Error("Bing API returned no images");
+  if (images.length === 0) throw new Error("No wallpaper images returned");
 
-  return {
-    images,
-    cachedAt: todayLocal(),
-  };
+  return { images, cachedAt: todayLocal() };
 }
 
 export function useWallpaper(): UseWallpaperResult {
@@ -146,7 +128,7 @@ export function useWallpaper(): UseWallpaperResult {
         }
 
         try {
-          const fresh = await fetchBingGallery();
+          const fresh = await fetchWallpaperViaServiceWorker();
           await chrome.storage.local.set({ [STORAGE_KEY]: fresh });
 
           if (!cancelled) {

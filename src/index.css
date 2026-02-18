@@ -79,6 +79,7 @@
     --sh-comment: #a19595;
     --x-reader-surface: #fdfcfb;
     --x-reader-border: var(--stone-200);
+    --inline-code-bg: rgba(135, 131, 120, 0.15);
     --x-success: #15803d;
     --pill-green-text: #15803d;
     --pill-green-bg: rgba(34, 197, 94, 0.12);
@@ -121,6 +122,7 @@
       --x-link-card: #1d1c1a;
       --x-reader-surface: #171614;
       --x-reader-border: #2d2b29;
+      --inline-code-bg: rgba(180, 176, 168, 0.18);
       --x-success: #22c55e;
       --sh-class: #8db9e2;
       --sh-identifier: #c9d1d9;
@@ -172,6 +174,7 @@
     --x-link-card: #1d1c1a;
     --x-reader-surface: #171614;
     --x-reader-border: #2d2b29;
+    --inline-code-bg: rgba(180, 176, 168, 0.18);
     --x-success: #22c55e;
     --sh-class: #8db9e2;
     --sh-identifier: #c9d1d9;
@@ -222,7 +225,16 @@
   }
 
   :not(pre) > code {
-    @apply rounded bg-x-card px-1.5 py-0.5 text-[0.88em];
+    padding: 0.2em 0.4em;
+    font-size: 85%;
+    white-space: break-spaces;
+    background-color: var(--inline-code-bg);
+    border-radius: 6px;
+  }
+
+  :not(pre) > code::before,
+  :not(pre) > code::after {
+    content: none;
   }
 
   kbd {
@@ -353,65 +365,59 @@
   align-items: center;
   max-width: 36rem;
   margin-inline: auto;
+  border-radius: 9999px;
+  background: rgba(32, 33, 36, 0.85);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow:
+    0 1px 6px rgba(0, 0, 0, 0.2),
+    0 4px 24px rgba(0, 0, 0, 0.12);
+  transition:
+    background-color var(--motion-fast) var(--motion-ease-hover),
+    border-color var(--motion-fast) var(--motion-ease-hover),
+    box-shadow var(--motion-fast) var(--motion-ease-hover);
 }
 
-.breath-search-icon {
-  position: absolute;
-  left: 1.1rem;
-  color: var(--breath-text-ghost);
-  pointer-events: none;
+.breath-search:focus-within {
+  background: rgba(32, 33, 36, 0.92);
+  border-color: rgba(255, 255, 255, 0.12);
+  box-shadow:
+    0 1px 8px rgba(0, 0, 0, 0.24),
+    0 6px 32px rgba(0, 0, 0, 0.16);
+}
+
+.breath-search-logo {
   display: flex;
   align-items: center;
+  padding-left: 1rem;
+  pointer-events: none;
 }
 
 .breath-search-input {
   width: 100%;
-  padding: 0.85rem 1.25rem 0.85rem 2.85rem;
-  border-radius: 9999px;
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  background: rgba(255, 255, 255, 0.08);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
+  padding: 0.85rem 0.75rem;
+  border-radius: 0;
+  border: none;
+  background: transparent;
   color: var(--breath-text-primary);
   font-size: 1rem;
   font-family: inherit;
   outline: none;
-  box-shadow: 0 1px 6px rgba(0, 0, 0, 0.12), 0 2px 16px rgba(0, 0, 0, 0.06);
-  transition:
-    border-color var(--motion-fast) var(--motion-ease-hover),
-    background-color var(--motion-fast) var(--motion-ease-hover),
-    box-shadow var(--motion-fast) var(--motion-ease-hover);
+  -webkit-appearance: none;
+  appearance: none;
 }
 
 .breath-search-input::placeholder {
-  color: var(--breath-text-ghost);
+  color: rgba(255, 255, 255, 0.45);
 }
 
-.breath-search-input:focus {
-  border-color: rgba(255, 255, 255, 0.2);
-  background: rgba(255, 255, 255, 0.12);
-  box-shadow: 0 1px 8px rgba(0, 0, 0, 0.16), 0 4px 24px rgba(0, 0, 0, 0.1);
-}
-
-.breath-search-kbd {
-  position: absolute;
-  right: 1rem;
-  min-width: 1.5em;
-  padding: 0.18em 0.42em;
-  border: 1px solid rgba(255, 255, 255, 0.14);
-  border-radius: 0.35rem;
-  background: rgba(255, 255, 255, 0.06);
-  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.04);
-  color: var(--breath-text-ghost);
-  font-size: 0.78rem;
-  font-weight: 500;
-  line-height: 1;
+.breath-search-trail {
+  display: flex;
+  align-items: center;
+  padding-right: 1rem;
+  color: var(--breath-text-primary);
   pointer-events: none;
-  transition: opacity var(--motion-fast) var(--motion-ease-hover);
-}
-
-.breath-search-input:focus ~ .breath-search-kbd {
-  opacity: 0;
 }
 
 .breath-icon-btn {
@@ -543,6 +549,7 @@
   height: 2.25rem;
   border: none;
   border-radius: 9999px;
+  cursor: pointer;
   background: transparent;
   display: inline-flex;
   align-items: center;

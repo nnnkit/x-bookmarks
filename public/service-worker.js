@@ -804,6 +804,48 @@ async function runWeeklyServiceWorkerCleanup() {
 }
 
 // ═══════════════════════════════════════════════════════════
+// WALLPAPER (BING DAILY IMAGE)
+// ═══════════════════════════════════════════════════════════
+
+const BING_ENDPOINT = "https://www.bing.com/HPImageArchive.aspx";
+
+async function handleFetchWallpaper({ width, height }) {
+  const params = new URLSearchParams({
+    format: "js",
+    idx: "0",
+    n: "8",
+    mkt: "en-US",
+    uhd: "1",
+    uhdwidth: String(width || 1920),
+    uhdheight: String(height || 1080),
+  });
+
+  const res = await fetch(`${BING_ENDPOINT}?${params.toString()}`, {
+    cache: "no-store",
+  });
+  if (!res.ok) throw new Error(`Bing API ${res.status}`);
+
+  const data = await res.json();
+  const rawImages = Array.isArray(data?.images) ? data.images : [];
+
+  const images = rawImages
+    .map((img) => {
+      if (!img || typeof img !== "object") return null;
+      const rawUrl = typeof img.url === "string" ? img.url : "";
+      if (!rawUrl) return null;
+      return {
+        url: rawUrl.startsWith("http") ? rawUrl : `https://www.bing.com${rawUrl}`,
+        title: typeof img.copyright === "string" ? img.copyright : "Bing daily wallpaper",
+      };
+    })
+    .filter(Boolean);
+
+  if (images.length === 0) throw new Error("Bing API returned no images");
+
+  return { images };
+}
+
+// ═══════════════════════════════════════════════════════════
 // API REQUEST HANDLERS
 // ═══════════════════════════════════════════════════════════
 
@@ -1405,6 +1447,12 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
   }
   if (message.type === "EXPORT_GRAPHQL_DOCS") {
     handleExportGraphqlDocs()
+      .then(sendResponse)
+      .catch((err) => sendResponse({ error: err.message }));
+    return true;
+  }
+  if (message.type === "FETCH_WALLPAPER") {
+    handleFetchWallpaper(message)
       .then(sendResponse)
       .catch((err) => sendResponse({ error: err.message }));
     return true;

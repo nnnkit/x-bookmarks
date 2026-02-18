@@ -216,7 +216,7 @@ export function TweetArticle({ article, compact = false, authorProfileImageUrl }
 
   const serifFont = `font-[Charter,"Iowan Old Style","Palatino Linotype","Book Antiqua",Georgia,serif]`;
   const titleClass =
-    `reader-heading text-3xl font-bold tracking-tight text-balance text-x-text ${serifFont}`;
+    `reader-heading mt-6 text-4xl font-bold tracking-tight text-balance text-x-text ${serifFont}`;
 
   if (hasBlocks) {
     return (
@@ -240,12 +240,12 @@ export function TweetArticle({ article, compact = false, authorProfileImageUrl }
           />
         )}
         {article.title && (
-          <h3
+          <h1
             id="section-article-title"
             className={`${titleClass} mb-5 break-inside-avoid`}
           >
             {article.title}
-          </h3>
+          </h1>
         )}
         <ArticleBlockRenderer
           blocks={article.contentBlocks!}
@@ -277,9 +277,9 @@ export function TweetArticle({ article, compact = false, authorProfileImageUrl }
           />
         )}
         {article.title && (
-          <h3 id="section-article-title" className={titleClass}>
+          <h1 id="section-article-title" className={titleClass}>
             {article.title}
-          </h3>
+          </h1>
         )}
         <div className="mt-2 md:columns-2 md:gap-8">
           <RichTextBlock text={plainText} compact={compact} style="article" />
@@ -348,9 +348,9 @@ export function TweetArticle({ article, compact = false, authorProfileImageUrl }
         />
       )}
       {article.title && (
-        <h3 id="section-article-title" className={titleClass}>
+        <h1 id="section-article-title" className={titleClass}>
           {article.title}
-        </h3>
+        </h1>
       )}
       <div className="md:columns-2 md:gap-8">
         {chunks.map((chunk, i) => (
