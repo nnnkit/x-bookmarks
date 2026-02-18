@@ -228,7 +228,7 @@ export function ReadingView({
                       {pickTitle(bookmark)}
                     </p>
                     <p className="mt-1 text-xs text-x-text-secondary">
-                      <span className="text-green-500">Done</span> &middot; @
+                      <span className="text-x-success">Done</span> &middot; @
                       {bookmark.author.screenName} &middot;{" "}
                       {formatTimeAgo(progress.lastReadAt)}
                     </p>

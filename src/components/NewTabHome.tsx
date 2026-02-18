@@ -5,14 +5,13 @@ import {
   pickTitle,
   pickExcerpt,
   estimateReadingMinutes,
-  hasReliableReadingTime,
-  inferCategory,
 } from "../lib/bookmark-utils";
 import { useWallpaper } from "../hooks/useWallpaper";
 import { useTopSites } from "../hooks/useTopSites";
 
 interface Props {
   bookmarks: Bookmark[];
+  detailedTweetIds: Set<string>;
   syncing: boolean;
   showTopSites: boolean;
   topSitesLimit: number;
@@ -26,7 +25,6 @@ interface DecoratedBookmark {
   bookmark: Bookmark;
   title: string;
   excerpt: string;
-  category: string;
   savedLabel: string;
   minutes: number | null;
   isRead: boolean;
@@ -122,6 +120,7 @@ function usePrefersReducedMotion() {
 
 export function NewTabHome({
   bookmarks,
+  detailedTweetIds,
   syncing,
   showTopSites,
   topSitesLimit,
@@ -153,16 +152,15 @@ export function NewTabHome({
       bookmark,
       title: pickTitle(bookmark),
       excerpt: pickExcerpt(bookmark),
-      category: inferCategory(bookmark),
       savedLabel: formatSavedLabel(bookmark.createdAt, nowMinute * 60000),
-      minutes: hasReliableReadingTime(bookmark)
+      minutes: detailedTweetIds.has(bookmark.tweetId)
         ? estimateReadingMinutes(bookmark)
         : null,
       isRead: readIds.has(bookmark.tweetId),
     }));
     const unread = allItems.filter((item) => !item.isRead);
     return { items: allItems, unreadItems: unread };
-  }, [bookmarks, nowMinute, readIds]);
+  }, [bookmarks, detailedTweetIds, nowMinute, readIds]);
 
   const rotationPool = useMemo(
     () =>
@@ -307,7 +305,7 @@ export function NewTabHome({
         switchCard(currentIndex - 1);
       } else if (e.key === "ArrowRight") {
         switchCard(currentIndex + 1);
-      } else if (e.key === "Enter") {
+      } else if (e.key === "Enter" || e.key === "o") {
         openForReading(currentItem);
       } else if (e.key === "l") {
         onOpenReading();
@@ -429,15 +427,7 @@ export function NewTabHome({
                         cardTransitioning ? "breath-card-content--leaving" : ""
                       }`}
                     >
-                      <div className="flex items-start justify-between gap-3">
-                        <p className="breath-eyebrow">Pick up where you left off</p>
-                        <p className="breath-meta text-right">
-                          {currentItem.category}
-                          {currentItem.minutes !== null
-                            ? ` · ${currentItem.minutes} min`
-                            : ""}
-                        </p>
-                      </div>
+                      <p className="breath-eyebrow">Pick up where you left off</p>
 
                       <h2 className="breath-title mt-4 text-balance">
                         {currentItem.title}
@@ -445,10 +435,16 @@ export function NewTabHome({
                       <p className="breath-description mt-2.5 text-pretty">
                         {currentItem.excerpt}
                       </p>
-                      <p className="breath-meta mt-3">
-                        @{currentItem.bookmark.author.screenName} ·{" "}
-                        {currentItem.savedLabel}
-                      </p>
+                      <div className="mt-3 flex items-end justify-between gap-3">
+                        <p className="breath-meta">
+                          @{currentItem.bookmark.author.screenName} ·{" "}
+                          {currentItem.savedLabel}
+                          {currentItem.minutes !== null
+                            ? ` · ${currentItem.minutes} min`
+                            : ""}
+                        </p>
+                        <kbd className="breath-kbd">O</kbd>
+                      </div>
                     </div>
                   </article>
 

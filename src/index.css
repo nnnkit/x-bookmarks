@@ -1,4 +1,5 @@
 @import "tailwindcss";
+@plugin "@tailwindcss/typography";
 
 @theme {
   --color-stone-50: var(--stone-50);
@@ -26,6 +27,19 @@
   --color-x-link-card: var(--x-link-card);
   --color-x-reader-surface: var(--x-reader-surface);
   --color-x-reader-border: var(--x-reader-border);
+  --color-x-success: var(--x-success);
+  --color-pill-green-text: var(--pill-green-text);
+  --color-pill-green-bg: var(--pill-green-bg);
+  --color-pill-green-border: var(--pill-green-border);
+  --color-pill-amber-text: var(--pill-amber-text);
+  --color-pill-amber-bg: var(--pill-amber-bg);
+  --color-pill-amber-border: var(--pill-amber-border);
+  --color-pill-cyan-text: var(--pill-cyan-text);
+  --color-pill-cyan-bg: var(--pill-cyan-bg);
+  --color-pill-cyan-border: var(--pill-cyan-border);
+  --color-pill-orange-text: var(--pill-orange-text);
+  --color-pill-orange-bg: var(--pill-orange-bg);
+  --color-pill-orange-border: var(--pill-orange-border);
 }
 
 @layer base {
@@ -46,16 +60,38 @@
     --orange-500: #f97316;
     --orange-600: #ea580c;
 
-    --x-blue: var(--orange-600);
+    --x-blue: #c2410c;
     --x-bg: var(--stone-50);
     --x-card: #ffffff;
     --x-border: var(--stone-200);
     --x-text: var(--stone-900);
-    --x-text-secondary: var(--stone-600);
+    --x-text-secondary: var(--stone-700);
     --x-hover: var(--stone-100);
     --x-link-card: #f8f7f5;
+    --sh-class: #2d5e9d;
+    --sh-identifier: #354150;
+    --sh-sign: #8996a3;
+    --sh-property: #0550ae;
+    --sh-entity: #249a97;
+    --sh-jsxliterals: #6266d1;
+    --sh-string: #00a99a;
+    --sh-keyword: #cf222e;
+    --sh-comment: #a19595;
     --x-reader-surface: #fdfcfb;
     --x-reader-border: var(--stone-200);
+    --x-success: #15803d;
+    --pill-green-text: #15803d;
+    --pill-green-bg: rgba(34, 197, 94, 0.12);
+    --pill-green-border: rgba(34, 197, 94, 0.30);
+    --pill-amber-text: #b45309;
+    --pill-amber-bg: rgba(245, 158, 11, 0.12);
+    --pill-amber-border: rgba(245, 158, 11, 0.30);
+    --pill-cyan-text: #0e7490;
+    --pill-cyan-bg: rgba(6, 182, 212, 0.12);
+    --pill-cyan-border: rgba(6, 182, 212, 0.30);
+    --pill-orange-text: #c2410c;
+    --pill-orange-bg: rgba(249, 115, 22, 0.12);
+    --pill-orange-border: rgba(249, 115, 22, 0.30);
   }
 
   @media (prefers-color-scheme: dark) {
@@ -80,11 +116,33 @@
       --x-card: #191816;
       --x-border: #2a2927;
       --x-text: rgba(255, 255, 255, 0.92);
-      --x-text-secondary: rgba(255, 255, 255, 0.7);
+      --x-text-secondary: rgba(255, 255, 255, 0.75);
       --x-hover: #232220;
       --x-link-card: #1d1c1a;
       --x-reader-surface: #171614;
       --x-reader-border: #2d2b29;
+      --x-success: #22c55e;
+      --sh-class: #8db9e2;
+      --sh-identifier: #c9d1d9;
+      --sh-sign: #768390;
+      --sh-property: #79c0ff;
+      --sh-entity: #56d4cf;
+      --sh-jsxliterals: #a5a6f6;
+      --sh-string: #a5d6ff;
+      --sh-keyword: #f47067;
+      --sh-comment: #636c76;
+      --pill-green-text: #86efac;
+      --pill-green-bg: rgba(34, 197, 94, 0.12);
+      --pill-green-border: rgba(34, 197, 94, 0.30);
+      --pill-amber-text: #fcd34d;
+      --pill-amber-bg: rgba(245, 158, 11, 0.12);
+      --pill-amber-border: rgba(245, 158, 11, 0.30);
+      --pill-cyan-text: #67e8f9;
+      --pill-cyan-bg: rgba(6, 182, 212, 0.12);
+      --pill-cyan-border: rgba(6, 182, 212, 0.30);
+      --pill-orange-text: #fdba74;
+      --pill-orange-bg: rgba(249, 115, 22, 0.12);
+      --pill-orange-border: rgba(249, 115, 22, 0.30);
     }
   }
 
@@ -109,11 +167,33 @@
     --x-card: #191816;
     --x-border: #2a2927;
     --x-text: rgba(255, 255, 255, 0.92);
-    --x-text-secondary: rgba(255, 255, 255, 0.7);
+    --x-text-secondary: rgba(255, 255, 255, 0.75);
     --x-hover: #232220;
     --x-link-card: #1d1c1a;
     --x-reader-surface: #171614;
     --x-reader-border: #2d2b29;
+    --x-success: #22c55e;
+    --sh-class: #8db9e2;
+    --sh-identifier: #c9d1d9;
+    --sh-sign: #768390;
+    --sh-property: #79c0ff;
+    --sh-entity: #56d4cf;
+    --sh-jsxliterals: #a5a6f6;
+    --sh-string: #a5d6ff;
+    --sh-keyword: #f47067;
+    --sh-comment: #636c76;
+    --pill-green-text: #86efac;
+    --pill-green-bg: rgba(34, 197, 94, 0.12);
+    --pill-green-border: rgba(34, 197, 94, 0.30);
+    --pill-amber-text: #fcd34d;
+    --pill-amber-bg: rgba(245, 158, 11, 0.12);
+    --pill-amber-border: rgba(245, 158, 11, 0.30);
+    --pill-cyan-text: #67e8f9;
+    --pill-cyan-bg: rgba(6, 182, 212, 0.12);
+    --pill-cyan-border: rgba(6, 182, 212, 0.30);
+    --pill-orange-text: #fdba74;
+    --pill-orange-bg: rgba(249, 115, 22, 0.12);
+    --pill-orange-border: rgba(249, 115, 22, 0.30);
   }
 
   html,
@@ -147,6 +227,25 @@
   .reader-heading {
     scroll-margin-top: 5rem;
   }
+}
+
+@utility prose-reader {
+  --tw-prose-body: var(--x-text);
+  --tw-prose-headings: var(--x-text);
+  --tw-prose-lead: var(--x-text-secondary);
+  --tw-prose-links: var(--x-blue);
+  --tw-prose-bold: var(--x-text);
+  --tw-prose-counters: var(--x-text-secondary);
+  --tw-prose-bullets: var(--x-text-secondary);
+  --tw-prose-hr: var(--x-border);
+  --tw-prose-quotes: var(--x-text);
+  --tw-prose-quote-borders: var(--x-border);
+  --tw-prose-captions: var(--x-text-secondary);
+  --tw-prose-code: var(--x-text);
+  --tw-prose-pre-code: var(--x-text);
+  --tw-prose-pre-bg: var(--x-card);
+  --tw-prose-th-borders: var(--x-border);
+  --tw-prose-td-borders: var(--x-border);
 }
 
 .breath-home {
@@ -553,7 +652,7 @@
 
 .breath-wallpaper-label {
   max-width: min(38ch, 55vw);
-  color: rgba(255, 255, 255, 0.34);
+  color: rgba(255, 255, 255, 0.46);
   font-size: 0.68rem;
   line-height: 1.3;
 }

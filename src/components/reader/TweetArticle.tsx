@@ -5,12 +5,12 @@ import type {
   ArticleContentEntity,
 } from "../../types";
 import {
-  baseTweetTextClass,
   detectArticleHeadings,
   groupBlocks,
   renderBlockInlineContent,
 } from "./utils";
 import { RichTextBlock } from "./TweetText";
+import { CodeBlock } from "./CodeBlock";
 
 function isLikelyProfileAvatarUrl(value: string): boolean {
   return /\/profile_images\//i.test(value);
@@ -34,19 +34,13 @@ interface ArticleBlockRendererProps {
 
 function ArticleBlockRenderer({ blocks, entityMap }: ArticleBlockRendererProps) {
   const groups = useMemo(() => groupBlocks(blocks), [blocks]);
-  const serifFont = `font-[Charter,"Iowan Old Style","Palatino Linotype","Book Antiqua",Georgia,serif]`;
-  const bodyClass = `${baseTweetTextClass} text-x-text text-pretty ${serifFont} text-[1.04rem] leading-8`;
 
   return (
-    <div className="space-y-4">
+    <div className="prose prose-lg prose-reader max-w-none font-[Charter,'Iowan_Old_Style','Palatino_Linotype','Book_Antiqua',Georgia,serif] [&_a]:text-x-blue [&_a:hover]:underline">
       {groups.map((group, groupIdx) => {
         if (group.type === "unordered-list") {
           return (
-            <ul
-              key={`group-${groupIdx}`}
-              id={`section-block-${groupIdx}`}
-              className={`list-disc pl-6 space-y-1.5 ${bodyClass}`}
-            >
+            <ul key={`group-${groupIdx}`} id={`section-block-${groupIdx}`}>
               {group.items.map((item, i) => (
                 <li
                   key={`li-${groupIdx}-${i}`}
@@ -61,11 +55,7 @@ function ArticleBlockRenderer({ blocks, entityMap }: ArticleBlockRendererProps) 
 
         if (group.type === "ordered-list") {
           return (
-            <ol
-              key={`group-${groupIdx}`}
-              id={`section-block-${groupIdx}`}
-              className={`list-decimal pl-6 space-y-1.5 ${bodyClass}`}
-            >
+            <ol key={`group-${groupIdx}`} id={`section-block-${groupIdx}`}>
               {group.items.map((item, i) => (
                 <li
                   key={`li-${groupIdx}-${i}`}
@@ -90,7 +80,7 @@ function ArticleBlockRenderer({ blocks, entityMap }: ArticleBlockRendererProps) 
                 return (
                   <figure
                     key={`group-${groupIdx}`}
-                    className="my-6 break-inside-avoid"
+                    className="-mx-6 my-6 break-inside-avoid"
                   >
                     <img
                       src={imageUrl}
@@ -109,22 +99,15 @@ function ArticleBlockRenderer({ blocks, entityMap }: ArticleBlockRendererProps) 
                   .replace(/^```\w*\n?/, "")
                   .replace(/\n?```$/, "");
                 return (
-                  <pre
+                  <CodeBlock
                     key={`group-${groupIdx}`}
-                    className="my-4 overflow-x-auto rounded-lg bg-x-card p-4 text-sm leading-relaxed text-x-text font-mono break-inside-avoid"
-                  >
-                    <code>{code}</code>
-                  </pre>
+                    code={code}
+                  />
                 );
               }
             }
             if (entity?.type === "DIVIDER") {
-              return (
-                <hr
-                  key={`group-${groupIdx}`}
-                  className="my-6 border-x-border"
-                />
-              );
+              return <hr key={`group-${groupIdx}`} />;
             }
           }
           return null;
@@ -139,7 +122,7 @@ function ArticleBlockRenderer({ blocks, entityMap }: ArticleBlockRendererProps) 
             <h2
               key={`group-${groupIdx}`}
               id={`section-block-${groupIdx}`}
-              className={`scroll-mt-24 text-2xl font-bold tracking-tight text-balance text-x-text ${serifFont} mt-6 mb-2 break-inside-avoid break-after-avoid`}
+              className="scroll-mt-24 break-inside-avoid break-after-avoid"
               dangerouslySetInnerHTML={{ __html: html }}
             />
           );
@@ -150,7 +133,7 @@ function ArticleBlockRenderer({ blocks, entityMap }: ArticleBlockRendererProps) 
             <h3
               key={`group-${groupIdx}`}
               id={`section-block-${groupIdx}`}
-              className={`scroll-mt-24 text-xl font-bold tracking-tight text-balance text-x-text ${serifFont} mt-5 mb-2 break-inside-avoid break-after-avoid`}
+              className="scroll-mt-24 break-inside-avoid break-after-avoid"
               dangerouslySetInnerHTML={{ __html: html }}
             />
           );
@@ -161,7 +144,7 @@ function ArticleBlockRenderer({ blocks, entityMap }: ArticleBlockRendererProps) 
             <h4
               key={`group-${groupIdx}`}
               id={`section-block-${groupIdx}`}
-              className={`scroll-mt-24 text-lg font-bold text-balance text-x-text ${serifFont} mt-4 mb-1 break-inside-avoid break-after-avoid`}
+              className="scroll-mt-24 break-inside-avoid break-after-avoid"
               dangerouslySetInnerHTML={{ __html: html }}
             />
           );
@@ -172,7 +155,7 @@ function ArticleBlockRenderer({ blocks, entityMap }: ArticleBlockRendererProps) 
             <blockquote
               key={`group-${groupIdx}`}
               id={`section-block-${groupIdx}`}
-              className={`border-l-3 border-x-text-secondary/40 pl-4 italic ${bodyClass} break-inside-avoid`}
+              className="break-inside-avoid"
               dangerouslySetInnerHTML={{ __html: html }}
             />
           );
@@ -180,13 +163,10 @@ function ArticleBlockRenderer({ blocks, entityMap }: ArticleBlockRendererProps) 
 
         if (block.type === "code-block") {
           return (
-            <pre
+            <CodeBlock
               key={`group-${groupIdx}`}
-              id={`section-block-${groupIdx}`}
-              className="overflow-x-auto rounded-lg bg-x-card p-4 text-sm leading-relaxed text-x-text font-mono break-inside-avoid"
-            >
-              <code dangerouslySetInnerHTML={{ __html: html }} />
-            </pre>
+              code={block.text}
+            />
           );
         }
 
@@ -194,7 +174,6 @@ function ArticleBlockRenderer({ blocks, entityMap }: ArticleBlockRendererProps) 
           <p
             key={`group-${groupIdx}`}
             id={`section-block-${groupIdx}`}
-            className={bodyClass}
             dangerouslySetInnerHTML={{ __html: html }}
           />
         );
@@ -235,13 +214,24 @@ export function TweetArticle({ article, compact = false, authorProfileImageUrl }
     [plainText, hasBlocks],
   );
 
+  const serifFont = `font-[Charter,"Iowan Old Style","Palatino Linotype","Book Antiqua",Georgia,serif]`;
   const titleClass =
-    "reader-heading text-lg font-semibold text-balance text-x-text";
+    `reader-heading text-3xl font-bold tracking-tight text-balance text-x-text ${serifFont}`;
 
   if (hasBlocks) {
     return (
       <section>
-        {coverImageUrl && (
+        {coverImageUrl && !compact && (
+          <div className="-mx-6 mb-5">
+            <img
+              src={coverImageUrl}
+              alt=""
+              className="w-full object-cover break-inside-avoid"
+              loading="lazy"
+            />
+          </div>
+        )}
+        {coverImageUrl && compact && (
           <img
             src={coverImageUrl}
             alt=""
@@ -257,12 +247,10 @@ export function TweetArticle({ article, compact = false, authorProfileImageUrl }
             {article.title}
           </h3>
         )}
-        <div>
-          <ArticleBlockRenderer
-            blocks={article.contentBlocks!}
-            entityMap={article.entityMap || {}}
-          />
-        </div>
+        <ArticleBlockRenderer
+          blocks={article.contentBlocks!}
+          entityMap={article.entityMap || {}}
+        />
       </section>
     );
   }
@@ -270,7 +258,17 @@ export function TweetArticle({ article, compact = false, authorProfileImageUrl }
   if (headings.length === 0) {
     return (
       <section>
-        {coverImageUrl && (
+        {coverImageUrl && !compact && (
+          <div className="-mx-6 mb-5">
+            <img
+              src={coverImageUrl}
+              alt=""
+              className="w-full object-cover"
+              loading="lazy"
+            />
+          </div>
+        )}
+        {coverImageUrl && compact && (
           <img
             src={coverImageUrl}
             alt=""
@@ -331,7 +329,17 @@ export function TweetArticle({ article, compact = false, authorProfileImageUrl }
 
   return (
     <section>
-      {coverImageUrl && (
+      {coverImageUrl && !compact && (
+        <div className="-mx-6 mb-5">
+          <img
+            src={coverImageUrl}
+            alt=""
+            className="w-full object-cover"
+            loading="lazy"
+          />
+        </div>
+      )}
+      {coverImageUrl && compact && (
         <img
           src={coverImageUrl}
           alt=""

@@ -1,6 +1,6 @@
 import { useState, useMemo, useEffect, useCallback } from "react";
 import { useAuth } from "./hooks/useAuth";
-import { useBookmarks } from "./hooks/useBookmarks";
+import { useBookmarks, useDetailedTweetIds } from "./hooks/useBookmarks";
 import { useTheme } from "./hooks/useTheme";
 import { useSettings } from "./hooks/useSettings";
 import { useKeyboardNavigation } from "./hooks/useKeyboard";
@@ -21,6 +21,7 @@ export default function App() {
   const { settings, updateSettings } = useSettings();
   const isReady = phase === "ready";
   const { bookmarks, syncState, refresh, unbookmark } = useBookmarks(isReady);
+  const detailedTweetIds = useDetailedTweetIds();
   const {
     continueReading,
     allUnread,
@@ -135,6 +136,7 @@ export default function App() {
     return (
       <NewTabHome
         bookmarks={bookmarks}
+        detailedTweetIds={detailedTweetIds}
         syncing={syncState.phase === "syncing"}
         showTopSites={settings.showTopSites}
         topSitesLimit={settings.topSitesLimit}

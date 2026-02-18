@@ -14,6 +14,7 @@ import {
   clearBookmarks,
   deleteBookmarksByTweetIds,
   cleanupOldTweetDetails,
+  getDetailedTweetIds,
 } from "../db";
 
 interface UseBookmarksReturn {
@@ -337,4 +338,16 @@ export function useBookmarks(isReady: boolean): UseBookmarksReturn {
   }, []);
 
   return { bookmarks, syncState, refresh, unbookmark };
+}
+
+const EMPTY_SET = new Set<string>();
+
+export function useDetailedTweetIds(): Set<string> {
+  const [ids, setIds] = useState<Set<string>>(EMPTY_SET);
+
+  useEffect(() => {
+    getDetailedTweetIds().then(setIds).catch(() => {});
+  }, []);
+
+  return ids;
 }

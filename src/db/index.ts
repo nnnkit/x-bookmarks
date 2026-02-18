@@ -228,6 +228,12 @@ export async function deleteReadingProgressByTweetIds(
   await tx.done;
 }
 
+export async function getDetailedTweetIds(): Promise<Set<string>> {
+  const db = await getDb();
+  const keys = await db.getAllKeys(DETAIL_STORE_NAME);
+  return new Set(keys);
+}
+
 export async function cleanupOldTweetDetails(maxAgeMs: number): Promise<number> {
   if (!Number.isFinite(maxAgeMs) || maxAgeMs <= 0) return 0;
 

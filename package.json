@@ -11,9 +11,11 @@
   "dependencies": {
     "idb": "^8.0.3",
     "react": "^19.0.0",
-    "react-dom": "^19.0.0"
+    "react-dom": "^19.0.0",
+    "sugar-high": "^0.9.5"
   },
   "devDependencies": {
+    "@tailwindcss/typography": "^0.5.19",
     "@tailwindcss/vite": "^4.0.0",
     "@types/chrome": "^0.0.287",
     "@types/react": "^19.0.0",

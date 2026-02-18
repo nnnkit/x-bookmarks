@@ -41,19 +41,19 @@ export function escapeHtml(text: string): string {
 export function textClassForMode(
   compact = false,
 ): string {
-  return `${baseTweetTextClass} text-x-text ${compact ? "text-[0.99rem] leading-7" : "text-[1.04rem] leading-8"}`;
+  return `${baseTweetTextClass} text-x-text ${compact ? "text-[0.99rem] leading-7" : "text-lg leading-[1.75]"}`;
 }
 
 export function kindPillClass(kind: TweetKind): string {
   if (kind === "repost")
-    return "bg-green-500/12 text-green-300 border-green-500/30";
+    return "bg-pill-green-bg text-pill-green-text border-pill-green-border";
   if (kind === "reply") return "bg-x-blue/12 text-x-blue border-x-blue/40";
   if (kind === "thread")
-    return "bg-amber-500/12 text-amber-300 border-amber-500/30";
+    return "bg-pill-amber-bg text-pill-amber-text border-pill-amber-border";
   if (kind === "quote")
-    return "bg-cyan-500/12 text-cyan-300 border-cyan-500/30";
+    return "bg-pill-cyan-bg text-pill-cyan-text border-pill-cyan-border";
   if (kind === "article")
-    return "bg-orange-500/12 text-orange-300 border-orange-500/30";
+    return "bg-pill-orange-bg text-pill-orange-text border-pill-orange-border";
   return "bg-x-link-card text-x-text-secondary border-x-border";
 }
 
@@ -314,8 +314,12 @@ export function paragraphizeText(
   return paragraphs.length > 0 ? paragraphs : [input];
 }
 
+function inlineCode(html: string): string {
+  return html.replace(/`([^`\n]+)`/g, "<code>$1</code>");
+}
+
 export function paragraphHtml(text: string): string {
-  return linkifyText(text).replace(/\n/g, "<br />");
+  return inlineCode(linkifyText(text)).replace(/\n/g, "<br />");
 }
 
 export function toEmbeddedReaderTweet(

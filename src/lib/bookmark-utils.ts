@@ -45,17 +45,6 @@ export function estimateReadingMinutes(bookmark: Bookmark): number {
   return Math.max(1, estimate);
 }
 
-export function hasReliableReadingTime(bookmark: Bookmark): boolean {
-  const hasFullArticle =
-    typeof bookmark.article?.plainText === "string" &&
-    bookmark.article.plainText.trim().length > 0;
-
-  if (hasFullArticle) return true;
-  if (bookmark.isThread || bookmark.tweetKind === "thread") return false;
-  if (bookmark.isLongText) return false;
-  if (bookmark.hasLink) return false;
-  return true;
-}
 
 export function inferCategory(bookmark: Bookmark): string {
   if (bookmark.tweetKind === "article") return "Article";

@@ -8,9 +8,10 @@ function mediaHeightClass(total: number, index: number): string {
 
 interface Props {
   items: Media[];
+  bleed?: boolean;
 }
 
-export function TweetMedia({ items }: Props) {
+export function TweetMedia({ items, bleed = false }: Props) {
   if (items.length === 0) return null;
 
   const prefersReducedMotion =
@@ -21,7 +22,7 @@ export function TweetMedia({ items }: Props) {
   const visible = items.slice(0, 4);
 
   return (
-    <div className="mt-5 overflow-hidden rounded-2xl border border-x-border bg-x-border">
+    <div className={`mt-5 overflow-hidden rounded-2xl border border-x-border bg-x-border ${bleed ? "-mx-6" : ""}`}>
       <div className={`grid ${columns} gap-px`}>
         {visible.map((item, index) => {
           const heightClass = mediaHeightClass(visible.length, index);

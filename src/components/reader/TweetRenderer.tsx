@@ -86,7 +86,7 @@ function TweetBody({ tweet, compact = false, sectionIdPrefix }: TweetBodyProps) 
         />
       )}
 
-      <TweetMedia items={tweet.media} />
+      <TweetMedia items={tweet.media} bleed={!compact} />
       <TweetQuote quotedTweet={tweet.quotedTweet || null} />
 
       {showArticle && (
@@ -163,7 +163,7 @@ export function TweetRenderer({
         isLongText={displayBookmark.isLongText}
       />
 
-      <div id="section-main-tweet">
+      <div id="section-main-tweet" className="px-6">
         <TweetBody
           tweet={displayBookmark}
           sectionIdPrefix={tweetSectionIdPrefix}
@@ -172,25 +172,27 @@ export function TweetRenderer({
       </div>
 
       {detailLoading && (
-        <div className="mt-6 flex items-center gap-3 py-4 text-sm text-x-text-secondary">
+        <div className="mt-6 flex items-center gap-3 px-6 py-4 text-sm text-x-text-secondary">
           <div className="size-4 animate-spin rounded-full border-2 border-x-blue border-t-transparent" />
           Loading details...
         </div>
       )}
 
       {detailError && (
-        <p className="mt-6 py-2 text-sm text-x-text-secondary">
+        <p className="mt-6 px-6 py-2 text-sm text-x-text-secondary">
           Could not load complete post details. Showing cached bookmark data.
         </p>
       )}
 
-      <TweetMetrics bookmark={displayBookmark} />
+      <div className="px-6">
+        <TweetMetrics bookmark={displayBookmark} />
 
-      <TweetRecommendations
-        relatedBookmarks={relatedBookmarks}
-        onOpenBookmark={onOpenBookmark}
-        onShuffle={onShuffle}
-      />
+        <TweetRecommendations
+          relatedBookmarks={relatedBookmarks}
+          onOpenBookmark={onOpenBookmark}
+          onShuffle={onShuffle}
+        />
+      </div>
     </div>
   );
 }
