@@ -14,6 +14,7 @@ interface Props {
   detailedTweetIds: Set<string>;
   syncing: boolean;
   showTopSites: boolean;
+  showSearchBar: boolean;
   topSitesLimit: number;
   onSync: () => void;
   onOpenBookmark: (bookmark: Bookmark) => void;
@@ -129,11 +130,22 @@ function usePrefersReducedMotion() {
   return prefersReducedMotion;
 }
 
+const SEARCH_ICON = (
+  <svg viewBox="0 0 20 20" fill="currentColor" className="size-5">
+    <path
+      fillRule="evenodd"
+      d="M9 3.5a5.5 5.5 0 1 0 0 11 5.5 5.5 0 0 0 0-11ZM2 9a7 7 0 1 1 12.452 4.391l3.328 3.329a.75.75 0 1 1-1.06 1.06l-3.329-3.328A7 7 0 0 1 2 9Z"
+      clipRule="evenodd"
+    />
+  </svg>
+);
+
 export function NewTabHome({
   bookmarks,
   detailedTweetIds,
   syncing,
   showTopSites,
+  showSearchBar,
   topSitesLimit,
   onSync,
   onOpenBookmark,
@@ -150,6 +162,7 @@ export function NewTabHome({
   const [currentIndex, setCurrentIndex] = useState(0);
   const [cardEngaged, setCardEngaged] = useState(false);
   const [cardTransitioning, setCardTransitioning] = useState(false);
+  const searchRef = useRef<HTMLInputElement>(null);
   const transitionTimerRef = useRef<number | null>(null);
   const currentIndexRef = useRef(0);
   const prefersReducedMotion = usePrefersReducedMotion();
@@ -323,7 +336,10 @@ export function NewTabHome({
       const tag = (e.target as HTMLElement).tagName;
       if (tag === "INPUT" || tag === "TEXTAREA") return;
 
-      if (e.key === "ArrowLeft") {
+      if (e.key === "/") {
+        e.preventDefault();
+        searchRef.current?.focus();
+      } else if (e.key === "ArrowLeft") {
         switchCard(currentIndex - 1);
       } else if (e.key === "ArrowRight") {
         switchCard(currentIndex + 1);
@@ -354,8 +370,8 @@ export function NewTabHome({
       <div className="breath-grain pointer-events-none absolute inset-0" />
 
       <div className="relative z-10 mx-auto flex min-h-dvh w-full max-w-4xl flex-col px-5 py-6 sm:px-8">
-        <main className="mx-auto flex w-full max-w-2xl flex-1 flex-col justify-end pb-10">
-          <section className="mx-auto w-full max-w-lg space-y-4">
+        <main className="mx-auto flex w-full max-w-2xl flex-1 flex-col items-center justify-center">
+          <section className="mx-auto w-full max-w-lg space-y-6">
             <div className="text-center">
               <h1
                 className="breath-clock text-balance tabular-nums"
@@ -364,6 +380,26 @@ export function NewTabHome({
                 {formatClock(now)}
               </h1>
             </div>
+
+            {showSearchBar && (
+              <form
+                className="breath-search"
+                action="https://www.google.com/search"
+                method="GET"
+                role="search"
+              >
+                <span className="breath-search-icon">{SEARCH_ICON}</span>
+                <input
+                  ref={searchRef}
+                  type="text"
+                  name="q"
+                  className="breath-search-input"
+                  placeholder="Search Google"
+                  autoComplete="off"
+                />
+                <kbd className="breath-search-kbd">/</kbd>
+              </form>
+            )}
 
             {showTopSites && topSites.length > 0 && (
               <nav
@@ -393,137 +429,137 @@ export function NewTabHome({
                 ))}
               </nav>
             )}
-
-            {currentItem ? (
-              <>
-                <article
-                  className={`breath-card breath-card--zen ${
-                    cardEngaged ? "is-engaged" : ""
-                  }`}
-                  onMouseEnter={() => setCardEngaged(true)}
-                  onMouseLeave={() => setCardEngaged(false)}
-                  onFocusCapture={() => setCardEngaged(true)}
-                  onBlurCapture={(event) => {
-                    const nextTarget =
-                      event.relatedTarget instanceof Node
-                        ? event.relatedTarget
-                        : null;
-                    if (
-                      !nextTarget ||
-                      !event.currentTarget.contains(nextTarget)
-                    ) {
-                      setCardEngaged(false);
-                    }
-                  }}
-                  onClick={() => openForReading(currentItem)}
-                  onKeyDown={(event) => {
-                    if (event.key === "Enter" || event.key === " ") {
-                      event.preventDefault();
-                      openForReading(currentItem);
-                    }
-                  }}
-                  tabIndex={0}
-                  role="button"
-                  aria-label={`Read ${currentItem.title} by @${
-                    currentItem.bookmark.author.screenName
-                  }${
-                    currentItem.minutes !== null
-                      ? `, ${currentItem.minutes} min read`
-                      : ""
-                  }`}
-                >
-                  <div
-                    className="breath-progress-track"
-                    role="progressbar"
-                    aria-valuemin={0}
-                    aria-valuemax={100}
-                    aria-valuenow={rotationPaused ? 0 : undefined}
-                  >
-                    <span
-                      key={currentIndex}
-                      className={`breath-progress-fill${rotationPaused ? "" : " is-animating"}`}
-                    />
-                  </div>
-
-                  <div
-                    className={`breath-card-content ${
-                      cardTransitioning ? "breath-card-content--leaving" : ""
-                    }`}
-                  >
-                    <div className="flex justify-between">
-                      <p className="breath-eyebrow">
-                        Pick up where you left off
-                      </p>
-                      <kbd className="breath-kbd">O</kbd>
-                    </div>
-
-                    <h2 className="breath-title mt-4 text-balance">
-                      {currentItem.title}
-                    </h2>
-                    <p className="breath-description mt-2.5 text-pretty">
-                      {currentItem.excerpt}
-                    </p>
-                    <div className="mt-3 flex items-end justify-between gap-3">
-                      <p className="breath-meta">
-                        @{currentItem.bookmark.author.screenName}
-                      </p>
-                    </div>
-                  </div>
-                </article>
-
-                <div
-                  className="breath-dots-row"
-                  role="tablist"
-                  aria-label="Recommendation dots"
-                >
-                  {rotationPool.map((item, index) => {
-                    const active = index === currentIndex;
-                    return (
-                      <button
-                        key={item.bookmark.tweetId}
-                        type="button"
-                        role="tab"
-                        aria-selected={active}
-                        aria-label={`Article ${index + 1} of ${rotationPool.length}`}
-                        className={`breath-dot ${active ? "is-active" : ""}`}
-                        onClick={() => switchCard(index)}
-                      >
-                        <span className="breath-dot-visual" />
-                      </button>
-                    );
-                  })}
-                </div>
-
-                <div className="breath-actions">
-                  <button
-                    type="button"
-                    className="breath-btn breath-btn--secondary"
-                    onClick={onOpenReading}
-                  >
-                    Open all bookmarks
-                    <kbd className="breath-kbd">L</kbd>
-                  </button>
-                </div>
-              </>
-            ) : (
-              <article className="breath-card text-center">
-                <p className="breath-eyebrow">Your reading list is quiet</p>
-                <p className="breath-empty mt-4 text-pretty">
-                  Sync your bookmarks once, and this tab will gently surface
-                  what to read next.
-                </p>
-                <button
-                  type="button"
-                  onClick={onSync}
-                  disabled={syncing}
-                  className="breath-btn breath-btn--primary mt-6"
-                >
-                  {syncing ? "Syncing..." : "Sync bookmarks"}
-                </button>
-              </article>
-            )}
           </section>
         </main>
+
+        <footer className="mx-auto w-full max-w-lg pb-12">
+          {currentItem ? (
+            <div className="space-y-4">
+              <article
+                className={`breath-card breath-card--zen ${
+                  cardEngaged ? "is-engaged" : ""
+                }`}
+                onMouseEnter={() => setCardEngaged(true)}
+                onMouseLeave={() => setCardEngaged(false)}
+                onFocusCapture={() => setCardEngaged(true)}
+                onBlurCapture={(event) => {
+                  const nextTarget =
+                    event.relatedTarget instanceof Node
+                      ? event.relatedTarget
+                      : null;
+                  if (
+                    !nextTarget ||
+                    !event.currentTarget.contains(nextTarget)
+                  ) {
+                    setCardEngaged(false);
+                  }
+                }}
+                onClick={() => openForReading(currentItem)}
+                onKeyDown={(event) => {
+                  if (event.key === "Enter" || event.key === " ") {
+                    event.preventDefault();
+                    openForReading(currentItem);
+                  }
+                }}
+                tabIndex={0}
+                role="button"
+                aria-label={`Read ${currentItem.title} by @${
+                  currentItem.bookmark.author.screenName
+                }${
+                  currentItem.minutes !== null
+                    ? `, ${currentItem.minutes} min read`
+                    : ""
+                }`}
+              >
+                <div
+                  className="breath-progress-track"
+                  role="progressbar"
+                  aria-valuemin={0}
+                  aria-valuemax={100}
+                  aria-valuenow={rotationPaused ? 0 : undefined}
+                >
+                  <span
+                    key={currentIndex}
+                    className={`breath-progress-fill${rotationPaused ? "" : " is-animating"}`}
+                  />
+                </div>
+
+                <div
+                  className={`breath-card-content ${
+                    cardTransitioning ? "breath-card-content--leaving" : ""
+                  }`}
+                >
+                  <div className="flex justify-between">
+                    <p className="breath-eyebrow">Pick up where you left off</p>
+                    <kbd className="breath-kbd">O</kbd>
+                  </div>
+
+                  <h2 className="breath-title mt-4 text-balance">
+                    {currentItem.title}
+                  </h2>
+                  <p className="breath-description mt-2.5 text-pretty">
+                    {currentItem.excerpt}
+                  </p>
+                  <div className="mt-3 flex items-end justify-between gap-3">
+                    <p className="breath-meta">
+                      @{currentItem.bookmark.author.screenName}
+                    </p>
+                  </div>
+                </div>
+              </article>
+
+              <div
+                className="breath-dots-row"
+                role="tablist"
+                aria-label="Recommendation dots"
+              >
+                {rotationPool.map((item, index) => {
+                  const active = index === currentIndex;
+                  return (
+                    <button
+                      key={item.bookmark.tweetId}
+                      type="button"
+                      role="tab"
+                      aria-selected={active}
+                      aria-label={`Article ${index + 1} of ${rotationPool.length}`}
+                      className={`breath-dot ${active ? "is-active" : ""}`}
+                      onClick={() => switchCard(index)}
+                    >
+                      <span className="breath-dot-visual" />
+                    </button>
+                  );
+                })}
+              </div>
+
+              <div className="breath-actions">
+                <button
+                  type="button"
+                  className="breath-btn breath-btn--secondary"
+                  onClick={onOpenReading}
+                >
+                  Open all bookmarks
+                  <kbd className="breath-kbd">L</kbd>
+                </button>
+              </div>
+            </div>
+          ) : (
+            <article className="breath-card text-center">
+              <p className="breath-eyebrow">Your reading list is quiet</p>
+              <p className="breath-empty mt-4 text-pretty">
+                Sync your bookmarks once, and this tab will gently surface what
+                to read next.
+              </p>
+              <button
+                type="button"
+                onClick={onSync}
+                disabled={syncing}
+                className="breath-btn breath-btn--primary mt-6"
+              >
+                {syncing ? "Syncing..." : "Sync bookmarks"}
+              </button>
+            </article>
+          )}
+        </footer>
 
         <button
           type="button"

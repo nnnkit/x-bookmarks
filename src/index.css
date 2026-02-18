@@ -234,22 +234,14 @@
     padding: 0.2em 0.4em;
     border-radius: 3px;
     border: 1px solid var(--x-border);
-    background: linear-gradient(
-      180deg,
-      color-mix(in srgb, var(--x-card) 80%, white 20%) 0%,
-      var(--x-card) 100%
-    );
-    box-shadow:
-      0 1px 0 1px color-mix(in srgb, var(--x-border) 90%, transparent),
-      0 2px 4px color-mix(in srgb, black 14%, transparent),
-      inset 0 1px 0 color-mix(in srgb, white 8%, transparent);
+    background: var(--x-card);
+    box-shadow: 0 1px 0 var(--x-border);
     font-family: inherit;
     font-size: 0.78em;
     font-weight: 600;
     line-height: 1;
     letter-spacing: 0.04em;
     color: var(--x-text-secondary);
-    text-shadow: 0 0.5px 0 color-mix(in srgb, var(--x-bg) 50%, transparent);
   }
 
   ::selection {
@@ -353,6 +345,73 @@
   font-weight: 300;
   letter-spacing: -0.04em;
   line-height: 1;
+}
+
+.breath-search {
+  position: relative;
+  display: flex;
+  align-items: center;
+  max-width: 36rem;
+  margin-inline: auto;
+}
+
+.breath-search-icon {
+  position: absolute;
+  left: 1.1rem;
+  color: var(--breath-text-ghost);
+  pointer-events: none;
+  display: flex;
+  align-items: center;
+}
+
+.breath-search-input {
+  width: 100%;
+  padding: 0.85rem 1.25rem 0.85rem 2.85rem;
+  border-radius: 9999px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  color: var(--breath-text-primary);
+  font-size: 1rem;
+  font-family: inherit;
+  outline: none;
+  box-shadow: 0 1px 6px rgba(0, 0, 0, 0.12), 0 2px 16px rgba(0, 0, 0, 0.06);
+  transition:
+    border-color var(--motion-fast) var(--motion-ease-hover),
+    background-color var(--motion-fast) var(--motion-ease-hover),
+    box-shadow var(--motion-fast) var(--motion-ease-hover);
+}
+
+.breath-search-input::placeholder {
+  color: var(--breath-text-ghost);
+}
+
+.breath-search-input:focus {
+  border-color: rgba(255, 255, 255, 0.2);
+  background: rgba(255, 255, 255, 0.12);
+  box-shadow: 0 1px 8px rgba(0, 0, 0, 0.16), 0 4px 24px rgba(0, 0, 0, 0.1);
+}
+
+.breath-search-kbd {
+  position: absolute;
+  right: 1rem;
+  min-width: 1.5em;
+  padding: 0.18em 0.42em;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 0.35rem;
+  background: rgba(255, 255, 255, 0.06);
+  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.04);
+  color: var(--breath-text-ghost);
+  font-size: 0.78rem;
+  font-weight: 500;
+  line-height: 1;
+  pointer-events: none;
+  transition: opacity var(--motion-fast) var(--motion-ease-hover);
+}
+
+.breath-search-input:focus ~ .breath-search-kbd {
+  opacity: 0;
 }
 
 .breath-icon-btn {
@@ -606,18 +665,10 @@
 
 .breath-kbd {
   margin-left: 0.5rem;
-  border: 1px solid rgba(255, 255, 255, 0.15);
-  background: linear-gradient(
-    180deg,
-    rgba(255, 255, 255, 0.18) 0%,
-    rgba(255, 255, 255, 0.1) 100%
-  );
-  box-shadow:
-    0 1px 0 1px rgba(255, 255, 255, 0.08),
-    0 2px 4px rgba(0, 0, 0, 0.35),
-    inset 0 1px 0 rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: rgba(255, 255, 255, 0.12);
+  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.06);
   color: rgba(255, 255, 255, 0.8);
-  text-shadow: 0 0.5px 0 rgba(0, 0, 0, 0.4);
 }
 
 .breath-btn--ghost {
@@ -639,22 +690,22 @@
 
 .breath-settings-btn {
   position: fixed;
-  right: max(1rem, env(safe-area-inset-right));
-  bottom: max(1rem, env(safe-area-inset-bottom));
+  right: max(1.5rem, env(safe-area-inset-right));
+  bottom: max(1.5rem, env(safe-area-inset-bottom));
   z-index: 20;
 }
 
 .breath-reading-btn {
   position: fixed;
-  right: max(1rem, env(safe-area-inset-right));
-  bottom: calc(max(1rem, env(safe-area-inset-bottom)) + 2.75rem);
+  right: max(1.5rem, env(safe-area-inset-right));
+  bottom: calc(max(1.5rem, env(safe-area-inset-bottom)) + 2.75rem);
   z-index: 20;
 }
 
 .breath-wallpaper-nav {
   position: fixed;
-  left: max(1rem, env(safe-area-inset-left));
-  bottom: max(1rem, env(safe-area-inset-bottom));
+  left: max(1.5rem, env(safe-area-inset-left));
+  bottom: max(1.5rem, env(safe-area-inset-bottom));
   display: flex;
   align-items: center;
   gap: 0.5rem;
@@ -743,6 +794,12 @@
 
   .breath-quick-link:hover .breath-quick-link-label {
     color: rgba(255, 255, 255, 0.7);
+  }
+
+  .breath-search-input:hover {
+    border-color: rgba(255, 255, 255, 0.2);
+    background: rgba(255, 255, 255, 0.1);
+    box-shadow: 0 1px 8px rgba(0, 0, 0, 0.16), 0 4px 24px rgba(0, 0, 0, 0.1);
   }
 
   .breath-icon-btn:hover {

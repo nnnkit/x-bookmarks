@@ -96,6 +96,7 @@ export default function DemoApp() {
         bookmarks={bookmarks}
         syncing={syncing}
         showTopSites={settings.showTopSites}
+        showSearchBar={settings.showSearchBar}
         topSitesLimit={settings.topSitesLimit}
         onSync={handleSync}
         onOpenBookmark={openBookmark}

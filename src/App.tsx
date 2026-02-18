@@ -116,6 +116,7 @@ export default function App() {
         detailedTweetIds={detailedTweetIds}
         syncing={syncState.phase === "syncing"}
         showTopSites={settings.showTopSites}
+        showSearchBar={settings.showSearchBar}
         topSitesLimit={settings.topSitesLimit}
         onSync={refresh}
         onOpenBookmark={openBookmark}
