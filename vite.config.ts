@@ -7,6 +7,7 @@ export default defineConfig({
   plugins: [react(), tailwindcss()],
   base: "./",
   build: {
+    modulePreload: { polyfill: false },
     outDir: "dist",
     rollupOptions: {
       input: {

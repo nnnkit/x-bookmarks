@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   ArrowLeft,
   BookmarkSimple,
@@ -8,7 +8,7 @@ import {
   Moon,
   Sun,
 } from "@phosphor-icons/react";
-import type { Bookmark, ThreadTweet } from "../types";
+import type { Bookmark, Highlight, ThreadTweet } from "../types";
 import type { ThemePreference } from "../hooks/useTheme";
 import { fetchTweetDetail } from "../api/core/posts";
 import { cn } from "../lib/cn";
@@ -16,6 +16,10 @@ import { cn } from "../lib/cn";
 import { resolveTweetKind } from "./reader/utils";
 import { TweetContent } from "./reader/TweetContent";
 import { useReadingProgress } from "../hooks/useReadingProgress";
+import { useHighlights } from "../hooks/useHighlights";
+import { useSelectionToolbar } from "../hooks/useSelectionToolbar";
+import { SelectionToolbar } from "./reader/SelectionToolbar";
+import { HighlightPopover } from "./reader/HighlightPopover";
 
 const THEME_CYCLE: ThemePreference[] = ["system", "light", "dark"];
 
@@ -48,6 +52,7 @@ export function BookmarkReader({
   onMarkAsRead,
   onMarkAsUnread,
 }: Props) {
+  const articleRef = useRef<HTMLElement>(null);
   const [readOverride, setReadOverride] = useState<boolean | null>(null);
   const [resolvedBookmark, setResolvedBookmark] = useState<Bookmark | null>(
     null,
@@ -60,6 +65,90 @@ export function BookmarkReader({
     contentReady: !detailLoading,
   });
   const effectiveMarkedRead = readOverride ?? isCompleted;
+
+  const {
+    addHighlight,
+    removeHighlight,
+    updateHighlightNote,
+    getHighlight,
+  } = useHighlights({
+    tweetId: bookmark.tweetId,
+    contentReady: !detailLoading,
+  });
+
+  const {
+    position: selectionPos,
+    visible: selectionVisible,
+    serializedRanges,
+    dismiss: dismissSelection,
+  } = useSelectionToolbar(articleRef);
+
+  const [activePopover, setActivePopover] = useState<{
+    highlight: Highlight;
+    x: number;
+    y: number;
+  } | null>(null);
+
+  const handleArticleClick = useCallback(
+    (e: React.MouseEvent) => {
+      const mark = (e.target as HTMLElement).closest?.(
+        "mark.xbt-highlight",
+      ) as HTMLElement | null;
+      if (!mark) return;
+
+      const highlightId = mark.dataset.highlightId;
+      if (!highlightId) return;
+
+      const highlight = getHighlight(highlightId);
+      if (!highlight) return;
+
+      const containerEl = articleRef.current;
+      if (!containerEl) return;
+      const containerRect = containerEl.getBoundingClientRect();
+      const rect = mark.getBoundingClientRect();
+
+      setActivePopover({
+        highlight,
+        x: rect.left + rect.width / 2 - containerRect.left,
+        y: rect.bottom - containerRect.top,
+      });
+    },
+    [getHighlight],
+  );
+
+  const handleHighlight = useCallback(() => {
+    if (serializedRanges.length === 0) return;
+    addHighlight(serializedRanges, null);
+    dismissSelection();
+  }, [addHighlight, serializedRanges, dismissSelection]);
+
+  const handleNote = useCallback(
+    (note: string) => {
+      if (serializedRanges.length === 0) return;
+      addHighlight(serializedRanges, note);
+      dismissSelection();
+    },
+    [addHighlight, serializedRanges, dismissSelection],
+  );
+
+  const handleRemoveHighlight = useCallback(
+    (id: string) => {
+      removeHighlight(id);
+      setActivePopover(null);
+    },
+    [removeHighlight],
+  );
+
+  const handleUpdateNote = useCallback(
+    (id: string, note: string | null) => {
+      updateHighlightNote(id, note);
+      setActivePopover((prev) => {
+        if (!prev || prev.highlight.id !== id) return prev;
+        return { ...prev, highlight: { ...prev.highlight, note } };
+      });
+    },
+    [updateHighlightNote],
+  );
 
   useEffect(() => {
     let cancelled = false;
@@ -192,7 +281,11 @@ export function BookmarkReader({
         </button>
       )}
 
-      <article className={cn(containerWidthClass, "mx-auto px-5 pb-16 pt-6")}>
+      <article
+        ref={articleRef}
+        className={cn(containerWidthClass, "relative mx-auto px-5 pb-16 pt-6")}
+        onClick={handleArticleClick}
+      >
         <TweetContent
           displayBookmark={displayBookmark}
           displayKind={displayKind}
@@ -213,8 +306,27 @@ export function BookmarkReader({
           } : undefined}
           isMarkedRead={effectiveMarkedRead}
         />
-      </article>
 
+        {selectionVisible && selectionPos && (
+          <SelectionToolbar
+            x={selectionPos.x}
+            y={selectionPos.y}
+            onHighlight={handleHighlight}
+            onNote={handleNote}
+          />
+        )}
+
+        {activePopover && (
+          <HighlightPopover
+            highlight={activePopover.highlight}
+            x={activePopover.x}
+            y={activePopover.y}
+            onRemove={handleRemoveHighlight}
+            onUpdateNote={handleUpdateNote}
+            onDismiss={() => setActivePopover(null)}
+          />
+        )}
+      </article>
     </div>
   );
 }

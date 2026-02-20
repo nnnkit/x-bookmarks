@@ -47,18 +47,7 @@
     --animate-preview-out: preview-out 150ms ease-in forwards;
     --animate-card-in: card-in 200ms cubic-bezier(0.23, 1, 0.32, 1) forwards;
     --animate-card-out: card-out 150ms ease-in forwards;
-    --animate-tab-slide-left: tab-slide-left 200ms cubic-bezier(0.23, 1, 0.32, 1);
-    --animate-tab-slide-right: tab-slide-right 200ms cubic-bezier(0.23, 1, 0.32, 1);
-
-    @keyframes tab-slide-left {
-        from { opacity: 0; transform: translateX(-20px); }
-        to { opacity: 1; transform: translateX(0); }
-    }
-    @keyframes tab-slide-right {
-        from { opacity: 0; transform: translateX(20px); }
-        to { opacity: 1; transform: translateX(0); }
-    }
-
+    --animate-toolbar-in: toolbar-in 150ms cubic-bezier(0.23, 1, 0.32, 1) forwards;
     @keyframes overlay-in {
         from { opacity: 0; }
         to { opacity: 1; }
@@ -82,6 +71,10 @@
     @keyframes card-out {
         from { opacity: 1; transform: translateY(0); }
         to { opacity: 0; transform: translateY(-8px); }
+    }
+    @keyframes toolbar-in {
+        from { opacity: 0; transform: scale(0.92) translateY(4px); }
+        to { opacity: 1; transform: scale(1) translateY(0); }
     }
 }
 
@@ -127,6 +120,9 @@
         --pill-green-text: #15803d;
         --pill-green-bg: rgba(34, 197, 94, 0.12);
         --pill-green-border: rgba(34, 197, 94, 0.3);
+        --highlight-bg: rgba(245, 158, 11, 0.2);
+        --highlight-bg-hover: rgba(245, 158, 11, 0.3);
+        --highlight-bg-active: rgba(245, 158, 11, 0.45);
         --pill-amber-text: #b45309;
         --pill-amber-bg: rgba(245, 158, 11, 0.12);
         --pill-amber-border: rgba(245, 158, 11, 0.3);
@@ -179,6 +175,9 @@
             --pill-green-text: #86efac;
             --pill-green-bg: rgba(34, 197, 94, 0.12);
             --pill-green-border: rgba(34, 197, 94, 0.3);
+            --highlight-bg: rgba(252, 211, 77, 0.15);
+            --highlight-bg-hover: rgba(252, 211, 77, 0.25);
+            --highlight-bg-active: rgba(252, 211, 77, 0.35);
             --pill-amber-text: #fcd34d;
             --pill-amber-bg: rgba(245, 158, 11, 0.12);
             --pill-amber-border: rgba(245, 158, 11, 0.3);
@@ -231,6 +230,9 @@
         --pill-green-text: #86efac;
         --pill-green-bg: rgba(34, 197, 94, 0.12);
         --pill-green-border: rgba(34, 197, 94, 0.3);
+        --highlight-bg: rgba(252, 211, 77, 0.15);
+        --highlight-bg-hover: rgba(252, 211, 77, 0.25);
+        --highlight-bg-active: rgba(252, 211, 77, 0.35);
         --pill-amber-text: #fcd34d;
         --pill-amber-bg: rgba(245, 158, 11, 0.12);
         --pill-amber-border: rgba(245, 158, 11, 0.3);
@@ -246,6 +248,10 @@
     body,
     #root {
         @apply min-h-dvh;
+    }
+
+    html {
+        scroll-behavior: smooth;
     }
 
     body {
@@ -308,6 +314,35 @@
 
     .reader-heading {
         scroll-margin-top: 5rem;
+    }
+
+    mark.xbt-highlight {
+        background-color: var(--highlight-bg);
+        box-decoration-break: clone;
+        -webkit-box-decoration-break: clone;
+        cursor: pointer;
+        border-radius: 2px;
+        padding: 0.05em 0;
+        transition: background-color 150ms ease;
+    }
+
+    mark.xbt-highlight:hover {
+        background-color: var(--highlight-bg-hover);
+    }
+
+    @keyframes highlight-flash {
+        from { background-color: var(--highlight-bg-active); }
+        to { background-color: var(--highlight-bg); }
+    }
+
+    mark.xbt-highlight-new {
+        animation: highlight-flash 600ms ease-out forwards;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    mark.xbt-highlight-new {
+        animation: none;
     }
 }
 
@@ -806,10 +841,6 @@
         transition: none;
     }
 
-    .animate-tab-slide-left,
-    .animate-tab-slide-right {
-        animation: none;
-    }
 }
 
 .xbt-tour-popover {

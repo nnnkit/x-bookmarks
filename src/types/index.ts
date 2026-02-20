@@ -159,6 +159,17 @@ export interface ReadingProgress {
   completed: boolean;
 }
 
+export interface Highlight {
+  id: string;
+  tweetId: string;
+  sectionId: string;
+  startOffset: number;
+  endOffset: number;
+  selectedText: string;
+  note: string | null;
+  createdAt: number;
+}
+
 export type BackgroundMode = "gradient" | "images";
 
 export interface UserSettings {

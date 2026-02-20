@@ -39,12 +39,10 @@ export function BookmarksList({
 }: Props) {
   const containerWidthClass = "max-w-3xl";
   const [focusedIndex, setFocusedIndex] = useState(-1);
-  const [slideDirection, setSlideDirection] = useState<"left" | "right" | null>(null);
   const [prevActiveTab, setPrevActiveTab] = useState(activeTab);
   if (prevActiveTab !== activeTab) {
     setPrevActiveTab(activeTab);
     setFocusedIndex(-1);
-    setSlideDirection(activeTab === "unread" ? "right" : "left");
   }
   const itemRefs = useRef<(HTMLButtonElement | null)[]>([]);
 
@@ -110,7 +108,7 @@ export function BookmarksList({
     onTabChange(activeTab === "continue" ? "unread" : "continue");
   }, { preventDefault: true }, [activeTab, onTabChange]);
 
-  let itemIndex = 0;
+  let continueIdx = 0;
 
   return (
     <div className="min-h-dvh bg-x-bg">
@@ -178,16 +176,15 @@ export function BookmarksList({
         </div>
       </div>
 
-      <main className={cn(containerWidthClass, "mx-auto px-4 pb-16 pt-6")}>
+      <main className={cn(containerWidthClass, "mx-auto overflow-x-hidden px-4 pb-16 pt-6")}>
         <div
-          key={activeTab}
-          className={cn(
-            slideDirection === "right" && "animate-tab-slide-right",
-            slideDirection === "left" && "animate-tab-slide-left",
-          )}
+          className="flex transition-transform duration-200 ease-[cubic-bezier(0.645,0.045,0.355,1)] motion-reduce:transition-none"
+          style={{ transform: activeTab === "unread" ? "translateX(-100%)" : "translateX(0)" }}
         >
-        {activeTab === "continue" && (
-          <>
+          <div
+            className={cn("w-full shrink-0", activeTab !== "continue" && "pointer-events-none")}
+            aria-hidden={activeTab !== "continue"}
+          >
             {inProgress.length > 0 && (
               <section className="mb-8">
                 <h2 className="mb-4 text-sm font-medium uppercase tracking-wider text-x-text-secondary">
@@ -195,11 +192,11 @@ export function BookmarksList({
                 </h2>
                 <div className="space-y-2">
                   {inProgress.map(({ bookmark, progress }) => {
-                    const idx = itemIndex++;
+                    const idx = continueIdx++;
                     return (
                     <button
                       key={bookmark.tweetId}
-                      ref={(el) => { itemRefs.current[idx] = el; }}
+                      ref={(el) => { if (activeTab === "continue") itemRefs.current[idx] = el; }}
                       type="button"
                       onClick={() => onOpenBookmark(bookmark)}
                       className={cn("flex w-full items-center gap-3 rounded-xl border p-3 text-left transition-colors hover:bg-x-hover", focusedIndex === idx ? "border-x-blue ring-2 ring-x-blue/40 bg-x-hover" : "border-x-border bg-x-card")}
@@ -232,11 +229,11 @@ export function BookmarksList({
                 </h2>
                 <div className="space-y-2">
                   {completed.map(({ bookmark, progress }) => {
-                    const idx = itemIndex++;
+                    const idx = continueIdx++;
                     return (
                     <button
                       key={bookmark.tweetId}
-                      ref={(el) => { itemRefs.current[idx] = el; }}
+                      ref={(el) => { if (activeTab === "continue") itemRefs.current[idx] = el; }}
                       type="button"
                       onClick={() => onOpenBookmark(bookmark)}
                       className={cn("flex w-full items-center gap-3 rounded-xl border p-3 text-left transition-colors", focusedIndex === idx ? "border-x-blue ring-2 ring-x-blue/40 bg-x-hover opacity-100" : "border-x-border bg-x-card opacity-70 hover:bg-x-hover hover:opacity-100")}
@@ -270,20 +267,20 @@ export function BookmarksList({
                 </p>
               </div>
             )}
-          </>
-        )}
+          </div>
 
-        {activeTab === "unread" && (
-          <>
+          <div
+            className={cn("w-full shrink-0", activeTab !== "unread" && "pointer-events-none")}
+            aria-hidden={activeTab !== "unread"}
+          >
             {unreadBookmarks.length > 0 ? (
               <div className="space-y-2">
-                {unreadBookmarks.map((bookmark) => {
-                  const idx = itemIndex++;
+                {unreadBookmarks.map((bookmark, idx) => {
                   const isNewest = bookmark.tweetId === newestUnreadId;
                   return (
                   <button
                     key={bookmark.tweetId}
-                    ref={(el) => { itemRefs.current[idx] = el; }}
+                    ref={(el) => { if (activeTab === "unread") itemRefs.current[idx] = el; }}
                     type="button"
                     onClick={() => onOpenBookmark(bookmark)}
                     className={cn("flex w-full items-center gap-3 rounded-xl border p-3 text-left transition-colors hover:bg-x-hover", focusedIndex === idx ? "border-x-blue ring-2 ring-x-blue/40 bg-x-hover" : "border-x-border bg-x-card")}
@@ -323,8 +320,7 @@ export function BookmarksList({
                 </p>
               </div>
             )}
-          </>
-        )}
+          </div>
         </div>
       </main>
     </div>
