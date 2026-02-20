@@ -1,5 +1,6 @@
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useHotkeys } from "react-hotkeys-hook";
+import { Monitor, Moon, Sun, X } from "@phosphor-icons/react";
 import type { Bookmark, UserSettings } from "../types";
 import type { ThemePreference } from "../hooks/useTheme";
 import { cn } from "../lib/cn";
@@ -34,6 +35,17 @@ export function SettingsModal({
   const backdropRef = useRef<HTMLDivElement>(null);
   const [resetting, setResetting] = useState(false);
   const [resetError, setResetError] = useState<string | null>(null);
+  const [visible, setVisible] = useState(false);
+  const [isClosing, setIsClosing] = useState(false);
+
+  useEffect(() => {
+    if (open) {
+      setVisible(true);
+      setIsClosing(false);
+    } else if (visible) {
+      setIsClosing(true);
+    }
+  }, [open]);
 
   useHotkeys("escape", () => onClose(), {
     enabled: open,
@@ -77,20 +89,32 @@ export function SettingsModal({
     }
   };
 
-  if (!open) return null;
+  if (!visible) return null;
 
   return (
     <div
       ref={backdropRef}
-      className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm"
+      className={cn(
+        "fixed inset-0 z-50 bg-black/50 backdrop-blur-sm",
+        isClosing ? "animate-overlay-out" : "animate-overlay-in",
+      )}
       role="dialog"
       aria-modal="true"
       aria-labelledby="settings-title"
+      onAnimationEnd={() => {
+        if (isClosing) {
+          setVisible(false);
+          setIsClosing(false);
+        }
+      }}
       onClick={(e) => {
         if (e.target === backdropRef.current) onClose();
       }}
     >
-      <div className="max-w-md mx-auto mt-[15vh] rounded-3xl border border-x-border bg-x-card shadow-2xl">
+      <div className={cn(
+        "max-w-md mx-auto mt-[15vh] rounded-3xl border border-x-border bg-x-card shadow-2xl",
+        isClosing ? "animate-preview-out" : "animate-preview-in",
+      )}>
         <div className="flex items-center justify-between px-6 pt-6 pb-4">
           <h2 id="settings-title" className="text-xl font-bold text-x-text">Settings</h2>
           <button
@@ -100,9 +124,7 @@ export function SettingsModal({
             aria-label="Close settings"
             title="Close"
           >
-            <svg viewBox="0 0 24 24" className="size-5" fill="currentColor">
-              <path d="M10.59 12L4.54 5.96l1.42-1.42L12 10.59l6.04-6.05 1.42 1.42L13.41 12l6.05 6.04-1.42 1.42L12 13.41l-6.04 6.05-1.42-1.42L10.59 12z" />
-            </svg>
+            <X className="size-5" />
           </button>
         </div>
 
@@ -125,17 +147,11 @@ export function SettingsModal({
                   )}
                 >
                   {opt.icon === "monitor" ? (
-                    <svg viewBox="0 0 256 256" className="size-4" fill="currentColor">
-                      <path d="M208,40H48A24,24,0,0,0,24,64V176a24,24,0,0,0,24,24H208a24,24,0,0,0,24-24V64A24,24,0,0,0,208,40Zm8,136a8,8,0,0,1-8,8H48a8,8,0,0,1-8-8V64a8,8,0,0,1,8-8H208a8,8,0,0,1,8,8Zm-48,48a8,8,0,0,1-8,8H96a8,8,0,0,1,0-16h64A8,8,0,0,1,168,224Z" />
-                    </svg>
+                    <Monitor className="size-4" />
                   ) : opt.icon === "sun" ? (
-                    <svg viewBox="0 0 256 256" className="size-4" fill="currentColor">
-                      <path d="M120,40V16a8,8,0,0,1,16,0V40a8,8,0,0,1-16,0Zm72,88a64,64,0,1,1-64-64A64.07,64.07,0,0,1,192,128Zm-16,0a48,48,0,1,0-48,48A48.05,48.05,0,0,0,176,128ZM58.34,69.66A8,8,0,0,0,69.66,58.34l-16-16A8,8,0,0,0,42.34,53.66Zm0,116.68-16,16a8,8,0,0,0,11.32,11.32l16-16a8,8,0,0,0-11.32-11.32ZM192,72a8,8,0,0,0,5.66-2.34l16-16a8,8,0,0,0-11.32-11.32l-16,16A8,8,0,0,0,192,72Zm5.66,114.34a8,8,0,0,0-11.32,11.32l16,16a8,8,0,0,0,11.32-11.32ZM48,128a8,8,0,0,0-8-8H16a8,8,0,0,0,0,16H40A8,8,0,0,0,48,128Zm80,80a8,8,0,0,0-8,8v24a8,8,0,0,0,16,0V216A8,8,0,0,0,128,208Zm112-88H216a8,8,0,0,0,0,16h24a8,8,0,0,0,0-16Z" />
-                    </svg>
+                    <Sun className="size-4" />
                   ) : (
-                    <svg viewBox="0 0 256 256" className="size-4" fill="currentColor">
-                      <path d="M233.54,142.23a8,8,0,0,0-8-2,88.08,88.08,0,0,1-109.8-109.8,8,8,0,0,0-10-10,104.84,104.84,0,0,0-52.91,37A104,104,0,0,0,128,232a103.09,103.09,0,0,0,62.52-20.88,104.84,104.84,0,0,0,37-52.91A8,8,0,0,0,233.54,142.23ZM128,216A88,88,0,0,1,65.76,65.76,89.1,89.1,0,0,1,100.36,40.73,104.12,104.12,0,0,0,215.27,155.64,89.1,89.1,0,0,1,190.24,190.24,87.39,87.39,0,0,1,128,216Z" />
-                    </svg>
+                    <Moon className="size-4" />
                   )}
                   {opt.label}
                 </button>

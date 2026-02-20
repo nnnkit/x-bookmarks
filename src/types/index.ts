@@ -1,8 +1,21 @@
+export interface AuthorAffiliate {
+  name: string;
+  badgeUrl?: string;
+  url?: string;
+}
+
 export interface Author {
   name: string;
   screenName: string;
   profileImageUrl: string;
   verified: boolean;
+  bio?: string;
+  followersCount?: number;
+  followingCount?: number;
+  website?: string;
+  createdAt?: string;
+  bannerUrl?: string;
+  affiliate?: AuthorAffiliate;
 }
 
 export interface Metrics {

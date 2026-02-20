@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useHotkeys } from "react-hotkeys-hook";
+import { ArrowLeft, ArrowsClockwise } from "@phosphor-icons/react";
 import type { Bookmark } from "../types";
 import type { ContinueReadingItem } from "../hooks/useContinueReading";
 import { pickTitle, estimateReadingMinutes } from "../lib/bookmark-utils";
@@ -121,9 +122,7 @@ export function BookmarksList({
             title="Back"
             className="rounded-full p-2 text-x-text transition-colors hover:bg-x-hover"
           >
-            <svg viewBox="0 0 24 24" className="size-5" fill="currentColor">
-              <path d="M7.414 13l5.043 5.04-1.414 1.42L3.586 12l7.457-7.46 1.414 1.42L7.414 11H21v2H7.414z" />
-            </svg>
+            <ArrowLeft className="size-5" />
           </button>
           <span className="text-lg font-semibold text-x-text">Reading</span>
           <div className="ml-auto">
@@ -135,13 +134,7 @@ export function BookmarksList({
               aria-label="Sync bookmarks"
               title="Sync bookmarks"
             >
-              <svg
-                viewBox="0 0 24 24"
-                className={cn("size-5", syncing && "animate-spin")}
-                fill="currentColor"
-              >
-                <path d="M12 4V1L8 5l4 4V6c3.31 0 6 2.69 6 6 0 1.01-.25 1.97-.7 2.8l1.46 1.46C19.54 15.03 20 13.57 20 12c0-4.42-3.58-8-8-8zm0 14c-3.31 0-6-2.69-6-6 0-1.01.25-1.97.7-2.8L5.24 7.74C4.46 8.97 4 10.43 4 12c0 4.42 3.58 8 8 8v3l4-4-4-4v3z" />
-              </svg>
+              <ArrowsClockwise className={cn("size-5", syncing && "animate-spin")} />
             </button>
           </div>
         </div>
@@ -305,7 +298,7 @@ export function BookmarksList({
                       <p className="mt-1 text-xs text-x-text-secondary">
                         @{bookmark.author.screenName} &middot;{" "}
                         {estimateReadingMinutes(bookmark)} min read &middot;{" "}
-                        <span className="rounded bg-x-border/50 px-1.5 py-0.5 text-[10px] uppercase">
+                        <span className="rounded bg-x-border/50 px-1.5 py-0.5 text-xs uppercase">
                           {inferKindBadge(bookmark)}
                         </span>
                       </p>

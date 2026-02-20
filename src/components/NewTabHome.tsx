@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useHotkeys } from "react-hotkeys-hook";
+import { GearSix, MagnifyingGlass } from "@phosphor-icons/react";
 import type { BackgroundMode, Bookmark, SyncState } from "../types";
 import { formatClock } from "../lib/time";
 import {
@@ -35,21 +36,9 @@ interface DecoratedBookmark {
   isRead: boolean;
 }
 
-const SETTINGS_ICON = (
-  <svg viewBox="0 0 24 24" className="size-5" fill="currentColor">
-    <path d="M12 15.5A3.5 3.5 0 018.5 12 3.5 3.5 0 0112 8.5a3.5 3.5 0 013.5 3.5 3.5 3.5 0 01-3.5 3.5m7.43-2.53c.04-.32.07-.64.07-.97s-.03-.66-.07-1l2.11-1.63c.19-.15.24-.42.12-.64l-2-3.46c-.12-.22-.39-.3-.61-.22l-2.49 1c-.52-.4-1.08-.73-1.69-.98l-.38-2.65C14.46 2.18 14.25 2 14 2h-4c-.25 0-.46.18-.49.42l-.38 2.65c-.61.25-1.17.59-1.69.98l-2.49-1c-.23-.09-.49 0-.61.22l-2 3.46c-.13.22-.07.49.12.64L4.57 11c-.04.34-.07.67-.07 1s.03.65.07.97l-2.11 1.66c-.19.15-.25.42-.12.64l2 3.46c.12.22.39.3.61.22l2.49-1.01c.52.4 1.08.73 1.69.98l.38 2.65c.03.24.24.42.49.42h4c.25 0 .46-.18.49-.42l.38-2.65c.61-.25 1.17-.58 1.69-.98l2.49 1.01c.22.08.49 0 .61-.22l2-3.46c.12-.22.07-.49-.12-.64l-2.11-1.66z" />
-  </svg>
-);
+const SETTINGS_ICON = <GearSix className="size-5" />;
 
-const SEARCH_ICON = (
-  <svg viewBox="0 0 20 20" fill="currentColor" className="size-4 opacity-50">
-    <path
-      fillRule="evenodd"
-      d="M9 3.5a5.5 5.5 0 1 0 0 11 5.5 5.5 0 0 0 0-11ZM2 9a7 7 0 1 1 12.452 4.391l3.328 3.329a.75.75 0 1 1-1.06 1.06l-3.329-3.328A7 7 0 0 1 2 9Z"
-      clipRule="evenodd"
-    />
-  </svg>
-);
+const SEARCH_ICON = <MagnifyingGlass className="size-4 opacity-50" />;
 
 const GOOGLE_LOGO = (
   <svg

@@ -36,3 +36,7 @@ export function truncateLabel(text: string, maxLen = 48): string {
   if (clean.length <= maxLen) return clean;
   return `${clean.slice(0, maxLen).trimEnd()}\u2026`;
 }
+
+export function formatCompactNumber(n: number): string {
+  return new Intl.NumberFormat("en", { notation: "compact" }).format(n);
+}

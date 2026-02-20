@@ -45,6 +45,8 @@
     --animate-overlay-out: overlay-out 150ms ease-in forwards;
     --animate-preview-in: preview-in 200ms cubic-bezier(0.23, 1, 0.32, 1) forwards;
     --animate-preview-out: preview-out 150ms ease-in forwards;
+    --animate-card-in: card-in 200ms cubic-bezier(0.23, 1, 0.32, 1) forwards;
+    --animate-card-out: card-out 150ms ease-in forwards;
 
     @keyframes overlay-in {
         from { opacity: 0; }
@@ -61,6 +63,14 @@
     @keyframes preview-out {
         from { opacity: 1; transform: scale(1); }
         to { opacity: 0; transform: scale(0.95); }
+    }
+    @keyframes card-in {
+        from { opacity: 0; transform: translateY(-8px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes card-out {
+        from { opacity: 1; transform: translateY(0); }
+        to { opacity: 0; transform: translateY(-8px); }
     }
 }
 

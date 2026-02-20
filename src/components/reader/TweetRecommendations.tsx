@@ -1,3 +1,4 @@
+import { Shuffle } from "@phosphor-icons/react";
 import type { Bookmark } from "../../types";
 import { compactPreview } from "./utils";
 
@@ -25,23 +26,7 @@ export function TweetRecommendations({ relatedBookmarks, onOpenBookmark, onShuff
               aria-label="Shuffle recommendations"
               title="Shuffle recommendations"
             >
-              <svg
-                viewBox="0 0 24 24"
-                className="size-4"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="1.9"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                aria-hidden="true"
-              >
-                <path d="M18 4l3 3-3 3" />
-                <path d="M18 17l3 3-3 3" />
-                <path d="M3 7h6a4 4 0 0 1 4 4" />
-                <path d="M3 20h6a4 4 0 0 0 4-4" />
-                <path d="M14 11h7" />
-                <path d="M14 20h7" />
-              </svg>
+              <Shuffle className="size-4" />
               Shuffle
             </button>
           )}

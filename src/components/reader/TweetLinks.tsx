@@ -1,3 +1,4 @@
+import { ArrowSquareOut, Check } from "@phosphor-icons/react";
 import type { LinkCard, TweetUrl } from "../../types";
 
 type ResolvedUrl = {
@@ -95,13 +96,7 @@ function ReadStatusButton({ onToggle, isRead }: ReadStatusButtonProps) {
           : "inline-flex items-center gap-1.5 rounded-full border border-x-border bg-x-card px-3 py-1.5 text-xs font-medium text-x-text-secondary transition-colors hover:bg-x-hover hover:text-x-text"
       }
     >
-      <svg viewBox="0 0 24 24" className="size-3.5" fill="currentColor">
-        {isRead ? (
-          <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z" />
-        ) : (
-          <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z" />
-        )}
-      </svg>
+      <Check weight="bold" className="size-3.5" />
       {isRead ? "Read" : "Mark as read"}
     </button>
   );
@@ -143,9 +138,7 @@ export function TweetLinks({
       className="inline-flex items-center gap-1.5 text-sm text-x-text-secondary transition-colors hover:text-x-text"
     >
       View on X
-      <svg viewBox="0 0 24 24" className="size-3.5" fill="currentColor">
-        <path d="M18 13v6a1 1 0 01-1 1H5a1 1 0 01-1-1V7a1 1 0 011-1h6v2H6v10h10v-5h2zm-6.29-6.29l1.41 1.41L17 4.24V11h2V1h-10v2h6.76l-4.05 4.05z" />
-      </svg>
+      <ArrowSquareOut className="size-3.5" />
     </a>
   ) : null;
 
@@ -155,9 +148,9 @@ export function TweetLinks({
     <>
       <LinkCards urls={resolvedUrls} />
       {hasActions && (
-        <div className="mt-5 flex items-center">
+        <div className="mt-5 flex items-center justify-end gap-3">
           {viewOnXLink}
-          {readStatusBtn && <div className="ml-auto">{readStatusBtn}</div>}
+          {readStatusBtn}
         </div>
       )}
     </>

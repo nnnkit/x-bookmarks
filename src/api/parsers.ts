@@ -574,6 +574,49 @@ function parseAuthor(core: UnknownRecord): Bookmark["author"] | null {
     userLegacy?.profile_image_url ||
     "";
 
+  const bio =
+    asString(asRecord(userResult.profile_bio)?.description) ||
+    asString(userLegacy?.description) ||
+    undefined;
+
+  const followersCount =
+    typeof userLegacy?.followers_count === "number"
+      ? userLegacy.followers_count
+      : undefined;
+  const followingCount =
+    typeof userLegacy?.friends_count === "number"
+      ? userLegacy.friends_count
+      : undefined;
+
+  const urlEntities = asRecords(
+    asRecord(asRecord(userLegacy?.entities)?.url)?.urls,
+  );
+  const website =
+    asString(urlEntities[0]?.expanded_url) || undefined;
+
+  const createdAt =
+    asString(userCore?.created_at) ||
+    asString(userLegacy?.created_at) ||
+    undefined;
+
+  const bannerUrl =
+    asString(userLegacy?.profile_banner_url) || undefined;
+
+  let affiliate: Bookmark["author"]["affiliate"];
+  const affiliateLabel = asRecord(
+    asRecord(userResult.affiliates_highlighted_label)?.label,
+  );
+  if (affiliateLabel) {
+    const affName = asString(asRecord(affiliateLabel.description)?.text);
+    if (affName) {
+      affiliate = {
+        name: affName,
+        badgeUrl: asString(asRecord(affiliateLabel.badge)?.url) || undefined,
+        url: asString(asRecord(affiliateLabel.url)?.url) || undefined,
+      };
+    }
+  }
+
   return {
     name,
     screenName,
@@ -582,6 +625,13 @@ function parseAuthor(core: UnknownRecord): Bookmark["author"] | null {
       Boolean(userResult.is_blue_verified) ||
       Boolean(userLegacy?.verified) ||
       Boolean(verification?.verified),
+    bio,
+    followersCount,
+    followingCount,
+    website,
+    createdAt,
+    bannerUrl,
+    affiliate,
   };
 }
 

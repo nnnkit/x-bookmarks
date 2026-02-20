@@ -1,3 +1,4 @@
+import { ArrowsClockwise } from "@phosphor-icons/react";
 import type { Bookmark } from "../../types";
 import {
   pickTitle,
@@ -36,9 +37,7 @@ export function PopupSuggestion({ bookmark, onOpen, onShuffle }: Props) {
             title="Show another"
             className="rounded-full p-1 text-x-text-secondary transition-colors hover:bg-x-hover hover:text-x-text"
           >
-            <svg viewBox="0 0 24 24" className="size-4" fill="currentColor">
-              <path d="M17.65 6.35a7.95 7.95 0 0 0-6.48-2.31c-3.67.37-6.69 3.35-7.1 7.02C3.52 15.91 7.27 20 12 20a7.98 7.98 0 0 0 7.73-6h-2.08A5.99 5.99 0 0 1 12 18c-3.64 0-6.5-3.2-5.94-6.91.4-2.66 2.56-4.82 5.22-5.22a5.98 5.98 0 0 1 4.87 1.78L13.5 10.5H20V4l-2.35 2.35z" />
-            </svg>
+            <ArrowsClockwise className="size-4" />
           </button>
         </div>
         <h2 className="mt-2 text-sm font-semibold leading-snug text-x-text">
