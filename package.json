@@ -14,7 +14,8 @@
     "ship:major": "pnpm release major",
     "release:version:check": "node scripts/check-version-sync.mjs",
     "release:check": "pnpm release:version:check && pnpm package:extension",
-    "release:prepare": "node scripts/prepare-release.mjs"
+    "release:prepare": "node scripts/prepare-release.mjs",
+    "test": "vitest run"
   },
   "dependencies": {
     "clsx": "^2.1.1",
@@ -34,6 +35,7 @@
     "@vitejs/plugin-react": "^4.3.0",
     "tailwindcss": "^4.0.0",
     "typescript": "^5.7.0",
-    "vite": "^6.0.0"
+    "vite": "^6.0.0",
+    "vitest": "^4.0.18"
   }
 }

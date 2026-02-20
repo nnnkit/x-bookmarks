@@ -1,9 +1,5 @@
 import type { LinkCard, TweetUrl } from "../../types";
 
-function isArticleHref(href: string): boolean {
-  return /(?:x|twitter)\.com\/i\/article\//i.test(href);
-}
-
 type ResolvedUrl = {
   href: string;
   displayUrl: string;
@@ -21,24 +17,24 @@ function LinkPreviewCard({ url, card }: LinkPreviewCardProps) {
       href={url.href}
       target="_blank"
       rel="noopener noreferrer"
-      className="block overflow-hidden rounded-xl border border-x-border bg-x-link-card transition-colors hover:bg-x-hover"
+      className="flex items-center gap-3 overflow-hidden rounded-lg border border-x-border bg-x-link-card px-3 py-2.5 transition-colors hover:bg-x-hover"
     >
       {card.imageUrl && (
         <img
           src={card.imageUrl}
           alt={card.imageAlt || card.title || ""}
-          className="aspect-2/1 w-full object-cover"
+          className="w-14 shrink-0 rounded"
         />
       )}
-      <div className="px-4 py-3">
-        <span className="block text-xs text-x-text-secondary">
+      <div className="min-w-0">
+        <span className="block truncate text-xs text-x-text-secondary">
           {card.domain || url.displayUrl}
         </span>
-        <span className="mt-0.5 block text-sm font-medium text-x-text line-clamp-2">
+        <span className="mt-0.5 block text-xs font-medium text-x-text line-clamp-1">
           {card.title}
         </span>
         {card.description && (
-          <span className="mt-0.5 block text-xs text-x-text-secondary line-clamp-2">
+          <span className="mt-0.5 block text-xs text-x-text-secondary line-clamp-1">
             {card.description}
           </span>
         )}
@@ -113,14 +109,14 @@ function MarkAsReadButton({
 
 interface Props {
   urls: TweetUrl[];
-  preferArticleButton?: boolean;
+  viewOnXUrl?: string;
   onMarkAsRead?: () => void;
   isMarkedRead?: boolean;
 }
 
 export function TweetUrls({
   urls,
-  preferArticleButton = false,
+  viewOnXUrl,
   onMarkAsRead,
   isMarkedRead,
 }: Props) {
@@ -139,43 +135,31 @@ export function TweetUrls({
     />
   ) : null;
 
-  if (resolvedUrls.length === 0) {
-    if (!markAsReadBtn) return null;
-    return <div className="mt-5 flex justify-end">{markAsReadBtn}</div>;
-  }
+  const viewOnXLink = viewOnXUrl ? (
+    <a
+      href={viewOnXUrl}
+      target="_blank"
+      rel="noopener noreferrer"
+      className="inline-flex items-center gap-1.5 text-sm text-x-text-secondary transition-colors hover:text-x-text"
+    >
+      View on X
+      <svg viewBox="0 0 24 24" className="size-3.5" fill="currentColor">
+        <path d="M18 13v6a1 1 0 01-1 1H5a1 1 0 01-1-1V7a1 1 0 011-1h6v2H6v10h10v-5h2zm-6.29-6.29l1.41 1.41L17 4.24V11h2V1h-10v2h6.76l-4.05 4.05z" />
+      </svg>
+    </a>
+  ) : null;
 
-  const articleUrl = resolvedUrls.find((url) => isArticleHref(url.href));
-  if (preferArticleButton && articleUrl) {
-    const remainingUrls = resolvedUrls.filter(
-      (url) => url.href !== articleUrl.href,
-    );
-    return (
-      <>
-        <div className="mt-5 flex items-center justify-end gap-2">
-          {markAsReadBtn}
-          <a
-            href={articleUrl.href}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex items-center gap-1.5 rounded-full border border-x-border bg-x-card px-3 py-1.5 text-xs font-medium text-x-text-secondary transition-colors hover:bg-x-hover hover:text-x-blue"
-          >
-            Original article
-            <svg viewBox="0 0 24 24" className="size-3.5" fill="currentColor">
-              <path d="M18 13v6a1 1 0 01-1 1H5a1 1 0 01-1-1V7a1 1 0 011-1h6v2H6v10h10v-5h2zm-6.29-6.29l1.41 1.41L17 4.24V11h2V1h-10v2h6.76l-4.05 4.05z" />
-            </svg>
-          </a>
-        </div>
-        <LinkCards urls={remainingUrls} />
-      </>
-    );
-  }
+  const hasActions = markAsReadBtn || viewOnXLink;
 
   return (
     <>
-      {markAsReadBtn && (
-        <div className="mt-5 flex justify-end">{markAsReadBtn}</div>
-      )}
       <LinkCards urls={resolvedUrls} />
+      {hasActions && (
+        <div className="mt-5 flex items-center">
+          {viewOnXLink}
+          {markAsReadBtn && <div className="ml-auto">{markAsReadBtn}</div>}
+        </div>
+      )}
     </>
   );
 }

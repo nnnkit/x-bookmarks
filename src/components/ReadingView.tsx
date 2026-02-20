@@ -5,10 +5,14 @@ import type { ContinueReadingItem } from "../hooks/useContinueReading";
 import { compactPreview } from "../lib/text";
 import { cn } from "../lib/cn";
 
+export type ReadingTab = "continue" | "unread";
+
 interface Props {
   continueReadingItems: ContinueReadingItem[];
   unreadBookmarks: Bookmark[];
   syncing: boolean;
+  activeTab: ReadingTab;
+  onTabChange: (tab: ReadingTab) => void;
   onOpenBookmark: (bookmark: Bookmark) => void;
   onSync: () => void;
   onBack: () => void;
@@ -75,12 +79,12 @@ function formatTimeAgo(timestamp: number): string {
   });
 }
 
-type Tab = "continue" | "unread";
-
 export function ReadingView({
   continueReadingItems,
   unreadBookmarks,
   syncing,
+  activeTab,
+  onTabChange,
   onOpenBookmark,
   onSync,
   onBack,
@@ -94,11 +98,6 @@ export function ReadingView({
   );
   const completed = continueReadingItems.filter(
     (item) => item.progress.completed,
-  );
-
-  const hasReading = inProgress.length > 0 || completed.length > 0;
-  const [activeTab, setActiveTab] = useState<Tab>(
-    hasReading ? "continue" : "unread",
   );
 
   const newestUnreadId = useMemo(() => {
@@ -151,8 +150,8 @@ export function ReadingView({
   }, [onBack]);
 
   useHotkeys("tab", () => {
-    setActiveTab((prev) => (prev === "continue" ? "unread" : "continue"));
-  }, { preventDefault: true });
+    onTabChange(activeTab === "continue" ? "unread" : "continue");
+  }, { preventDefault: true }, [activeTab, onTabChange]);
 
   let itemIndex = 0;
 
@@ -196,7 +195,7 @@ export function ReadingView({
             type="button"
             role="tab"
             aria-selected={activeTab === "continue"}
-            onClick={() => setActiveTab("continue")}
+            onClick={() => onTabChange("continue")}
             className={cn("relative px-4 py-2.5 text-sm font-medium transition-colors", activeTab === "continue" ? "text-x-text" : "text-x-text-secondary hover:text-x-text")}
           >
             Continue Reading
@@ -213,7 +212,7 @@ export function ReadingView({
             type="button"
             role="tab"
             aria-selected={activeTab === "unread"}
-            onClick={() => setActiveTab("unread")}
+            onClick={() => onTabChange("unread")}
             className={cn("relative px-4 py-2.5 text-sm font-medium transition-colors", activeTab === "unread" ? "text-x-text" : "text-x-text-secondary hover:text-x-text")}
           >
             Unread

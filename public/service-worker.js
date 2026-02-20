@@ -836,7 +836,7 @@ async function handleFetchBookmarks(cursor, _retried = false) {
   if (!stored.tw_auth_headers?.authorization) throw new Error("NO_AUTH");
   if (!stored.tw_query_id) throw new Error("NO_QUERY_ID");
 
-  const variables = { includePromotedContent: true };
+  const variables = { count: 100, includePromotedContent: true };
   if (cursor) variables.cursor = cursor;
 
   const features = stored.tw_features || JSON.stringify(DEFAULT_FEATURES);

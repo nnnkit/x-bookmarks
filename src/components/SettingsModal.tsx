@@ -188,7 +188,7 @@ export function SettingsModal({
                     if (!settings.showTopSites) {
                       try {
                         const granted = await chrome.permissions.request({
-                          permissions: ["topSites"],
+                          permissions: ["topSites", "favicon"],
                         });
                         if (!granted) return;
                       } catch {

@@ -19,11 +19,12 @@ interface TweetBodyProps {
   tweet: ReaderTweet;
   compact?: boolean;
   sectionIdPrefix?: string;
+  viewOnXUrl?: string;
   onMarkAsRead?: () => void;
   isMarkedRead?: boolean;
 }
 
-function TweetBody({ tweet, compact = false, sectionIdPrefix, onMarkAsRead, isMarkedRead }: TweetBodyProps) {
+function TweetBody({ tweet, compact = false, sectionIdPrefix, viewOnXUrl, onMarkAsRead, isMarkedRead }: TweetBodyProps) {
   const kind = resolveTweetKind(tweet);
 
   if (kind === "repost" && tweet.retweetedTweet) {
@@ -102,7 +103,7 @@ function TweetBody({ tweet, compact = false, sectionIdPrefix, onMarkAsRead, isMa
 
       <TweetUrls
         urls={tweet.urls}
-        preferArticleButton={Boolean(showArticle)}
+        viewOnXUrl={viewOnXUrl}
         onMarkAsRead={onMarkAsRead}
         isMarkedRead={isMarkedRead}
       />
@@ -179,22 +180,10 @@ export function TweetRenderer({
         <TweetBody
           tweet={displayBookmark}
           sectionIdPrefix={tweetSectionIdPrefix}
+          viewOnXUrl={`https://x.com/${displayBookmark.author.screenName}/status/${displayBookmark.tweetId}`}
           onMarkAsRead={onMarkAsRead}
           isMarkedRead={isMarkedRead}
         />
-
-        <a
-          href={`https://x.com/${displayBookmark.author.screenName}/status/${displayBookmark.tweetId}`}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="mt-5 inline-flex items-center gap-1.5 text-sm text-x-text-secondary transition-colors hover:text-x-text"
-        >
-          View on X
-          <svg viewBox="0 0 24 24" className="size-3.5" fill="currentColor">
-            <path d="M18 13v6a1 1 0 01-1 1H5a1 1 0 01-1-1V7a1 1 0 011-1h6v2H6v10h10v-5h2zm-6.29-6.29l1.41 1.41L17 4.24V11h2V1h-10v2h6.76l-4.05 4.05z" />
-          </svg>
-        </a>
-
         <ThreadTweets tweets={detailThread} />
       </div>
 

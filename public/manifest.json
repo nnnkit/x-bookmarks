@@ -8,11 +8,11 @@
     "storage",
     "webRequest",
     "declarativeNetRequest",
-    "tabs",
-    "favicon"
+    "tabs"
   ],
   "optional_permissions": [
-    "topSites"
+    "topSites",
+    "favicon"
   ],
   "host_permissions": [
     "https://x.com/*"

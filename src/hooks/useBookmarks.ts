@@ -16,6 +16,7 @@ import {
   getDetailedTweetIds,
 } from "../db";
 import { FetchQueue } from "../lib/fetch-queue";
+import { reconcileBookmarks } from "../lib/reconcile";
 
 interface UseBookmarksReturn {
   bookmarks: Bookmark[];
@@ -27,6 +28,8 @@ interface UseBookmarksReturn {
 const WEEKLY_DB_CLEANUP_KEY = "tw_db_weekly_cleanup_at";
 const WEEK_MS = 1000 * 60 * 60 * 24 * 7;
 const DETAIL_CACHE_RETENTION_MS = 1000 * 60 * 60 * 24 * 30;
+const LAST_RECONCILE_KEY = "last_full_reconcile";
+const RECONCILE_THROTTLE_MS = 1000 * 60 * 60 * 4;
 
 function compareSortIndexDesc(a: Bookmark, b: Bookmark): number {
   return b.sortIndex.localeCompare(a.sortIndex);
@@ -55,8 +58,10 @@ export function useBookmarks(isReady: boolean): UseBookmarksReturn {
         const lastCleanup = Number(stored[WEEKLY_DB_CLEANUP_KEY] || 0);
         if (Date.now() - lastCleanup < WEEK_MS) return;
 
-        await cleanupOldTweetDetails(DETAIL_CACHE_RETENTION_MS);
-        await chrome.storage.local.set({ [WEEKLY_DB_CLEANUP_KEY]: Date.now() });
+        await Promise.all([
+          cleanupOldTweetDetails(DETAIL_CACHE_RETENTION_MS),
+          chrome.storage.local.set({ [WEEKLY_DB_CLEANUP_KEY]: Date.now() }),
+        ]);
       } catch {}
     };
 
@@ -125,69 +130,84 @@ export function useBookmarks(isReady: boolean): UseBookmarksReturn {
     [],
   );
 
-  const syncNewBookmarks = useCallback(async () => {
-    if (syncingRef.current) return;
-    syncingRef.current = true;
+  const syncNewBookmarks = useCallback(
+    async (opts?: { fullReconcile?: boolean }) => {
+      if (syncingRef.current) return;
+      syncingRef.current = true;
 
-    const queue = new FetchQueue();
-    fetchQueueRef.current = queue;
+      const queue = new FetchQueue();
+      fetchQueueRef.current = queue;
 
-    setSyncState((prev) => ({
-      phase: "syncing",
-      total: prev.total || bookmarksRef.current.length,
-    }));
+      setSyncState((prev) => ({
+        phase: "syncing",
+        total: prev.total || bookmarksRef.current.length,
+      }));
 
-    try {
-      const existingIds = new Set(
-        bookmarksRef.current.map((b) => b.tweetId),
-      );
-      let cursor: string | undefined;
-
-      do {
-        const currentCursor = cursor;
-        const result = await queue.enqueue(() =>
-          fetchBookmarkPage(currentCursor),
-        );
-
-        if (queue.isAborted) break;
-
-        const newBookmarks = result.bookmarks.filter(
-          (b) => !existingIds.has(b.tweetId),
-        );
-
-        if (newBookmarks.length === 0) break;
-
-        await upsertBookmarks(newBookmarks);
-        for (const b of newBookmarks) {
-          existingIds.add(b.tweetId);
+      let doReconcile = opts?.fullReconcile === true;
+      if (doReconcile) {
+        const stored = await chrome.storage.local.get([LAST_RECONCILE_KEY]);
+        const lastReconcile = Number(stored[LAST_RECONCILE_KEY] || 0);
+        if (Date.now() - lastReconcile < RECONCILE_THROTTLE_MS) {
+          doReconcile = false;
         }
+      }
 
-        const updated = [...bookmarksRef.current, ...newBookmarks].toSorted(
-          compareSortIndexDesc,
+      try {
+        const existingIds = new Set(
+          bookmarksRef.current.map((b) => b.tweetId),
         );
-        bookmarksRef.current = updated;
-        setBookmarks(updated);
-        setSyncState({ phase: "syncing", total: updated.length });
 
-        cursor = result.cursor || undefined;
-      } while (cursor && !queue.isAborted);
+        const result = await reconcileBookmarks({
+          localIds: existingIds,
+          fetchPage: (cursor) =>
+            queue.enqueue(() => fetchBookmarkPage(cursor)),
+          fullReconcile: doReconcile,
+          onPage: async (pageNew) => {
+            await upsertBookmarks(pageNew);
 
-      if (!queue.isAborted) {
-        await chrome.storage.local.set({ last_sync: Date.now() });
-        setSyncState({ phase: "done", total: bookmarksRef.current.length });
+            const updated = [...bookmarksRef.current, ...pageNew].toSorted(
+              compareSortIndexDesc,
+            );
+            bookmarksRef.current = updated;
+            setBookmarks(updated);
+            setSyncState({ phase: "syncing", total: updated.length });
+          },
+        });
+
+        if (!queue.isAborted) {
+          if (doReconcile && result.staleIds.length > 0) {
+            await deleteBookmarksByTweetIds(result.staleIds);
+            const staleSet = new Set(result.staleIds);
+            const filtered = bookmarksRef.current.filter(
+              (b) => !staleSet.has(b.tweetId),
+            );
+            bookmarksRef.current = filtered;
+            setBookmarks(filtered);
+          }
+
+          if (doReconcile) {
+            await chrome.storage.local.set({
+              [LAST_RECONCILE_KEY]: Date.now(),
+            });
+          }
+
+          await chrome.storage.local.set({ last_sync: Date.now() });
+          setSyncState({ phase: "done", total: bookmarksRef.current.length });
+        }
+      } catch (err) {
+        if (!queue.isAborted) {
+          handleSyncError(err, syncNewBookmarks);
+        }
+      } finally {
+        syncingRef.current = false;
+        fetchQueueRef.current = null;
       }
-    } catch (err) {
-      if (!queue.isAborted) {
-        handleSyncError(err, syncNewBookmarks);
-      }
-    } finally {
-      syncingRef.current = false;
-      fetchQueueRef.current = null;
-    }
-  }, [handleSyncError]);
+    },
+    [handleSyncError],
+  );
 
   const refresh = useCallback(() => {
-    syncNewBookmarks();
+    syncNewBookmarks({ fullReconcile: true });
   }, [syncNewBookmarks]);
 
   const applyBookmarkEvents = useCallback(async () => {

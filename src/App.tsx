@@ -11,7 +11,7 @@ import { resetLocalData } from "./lib/reset";
 import { Onboarding } from "./components/Onboarding";
 import { NewTabHome } from "./components/NewTabHome";
 import { ReaderView } from "./components/ReaderView";
-import { ReadingView } from "./components/ReadingView";
+import { ReadingView, type ReadingTab } from "./components/ReadingView";
 import { SettingsModal } from "./components/SettingsModal";
 import { useContinueReading } from "./hooks/useContinueReading";
 import type { Bookmark } from "./types";
@@ -36,6 +36,14 @@ export default function App() {
     null,
   );
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const [readingTab, setReadingTab] = useState<ReadingTab>(() => {
+    const stored = localStorage.getItem("readingTab");
+    return stored === "unread" ? "unread" : "continue";
+  });
+  const handleReadingTabChange = useCallback((tab: ReadingTab) => {
+    setReadingTab(tab);
+    localStorage.setItem("readingTab", tab);
+  }, []);
   const [shuffleSeed, setShuffleSeed] = useState(0);
 
   if (
@@ -157,6 +165,8 @@ export default function App() {
           continueReadingItems={continueReading}
           unreadBookmarks={allUnread}
           syncing={syncState.phase === "syncing"}
+          activeTab={readingTab}
+          onTabChange={handleReadingTabChange}
           onOpenBookmark={openBookmark}
           onSync={refresh}
           onBack={() => setView("home")}

@@ -54,7 +54,7 @@ export async function fetchTweetDetail(
   }
 
   const detail = parseTweetDetailPayload(response.data, tweetId);
-  await upsertTweetDetailCache({
+  upsertTweetDetailCache({
     tweetId,
     fetchedAt: Date.now(),
     focalTweet: detail.focalTweet,
