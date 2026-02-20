@@ -1,75 +1,13 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useRef, useState } from "react";
+import { X } from "@phosphor-icons/react";
 import type { Media } from "../../types";
 import { cn } from "../../lib/cn";
+import { Modal } from "../Modal";
 
 function mediaHeightClass(total: number, index: number): string {
   if (total === 1) return "max-h-[72vh]";
   if (total === 3 && index === 0) return "h-60";
   return "h-44";
-}
-
-interface ImagePreviewProps {
-  src: string;
-  alt: string;
-  onClose: () => void;
-}
-
-function ImagePreview({ src, alt, onClose }: ImagePreviewProps) {
-  const [isClosing, setIsClosing] = useState(false);
-  const closingRef = useRef(false);
-
-  const handleClose = useCallback(() => {
-    if (closingRef.current) return;
-    closingRef.current = true;
-    setIsClosing(true);
-  }, []);
-
-  useEffect(() => {
-    function handleKey(e: KeyboardEvent) {
-      if (e.key === "Escape") {
-        e.stopImmediatePropagation();
-        handleClose();
-      }
-    }
-    document.addEventListener("keydown", handleKey, true);
-    return () => document.removeEventListener("keydown", handleKey, true);
-  }, [handleClose]);
-
-  return (
-    <div
-      className={cn(
-        "fixed inset-0 z-50 flex items-center justify-center bg-black/80",
-        isClosing ? "animate-overlay-out" : "animate-overlay-in",
-      )}
-      onAnimationEnd={() => {
-        if (isClosing) onClose();
-      }}
-      onClick={handleClose}
-    >
-      <button
-        onClick={handleClose}
-        aria-label="Close preview"
-        className={cn(
-          "absolute right-4 top-4 z-10 flex size-10 cursor-pointer items-center justify-center rounded-full bg-black/60 text-white transition-colors hover:bg-black/80",
-          isClosing ? "animate-overlay-out" : "animate-overlay-in",
-        )}
-      >
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-          <line x1="18" y1="6" x2="6" y2="18" />
-          <line x1="6" y1="6" x2="18" y2="18" />
-        </svg>
-      </button>
-      <img
-        src={src}
-        alt={alt}
-        className={cn(
-          "max-h-[90vh] max-w-[90vw] object-contain",
-          isClosing ? "animate-preview-out" : "animate-preview-in",
-        )}
-        onClick={(e) => e.stopPropagation()}
-      />
-    </div>
-  );
 }
 
 interface Props {
@@ -79,6 +17,8 @@ interface Props {
 
 export function TweetMedia({ items, bleed = false }: Props) {
   const [previewImage, setPreviewImage] = useState<{ src: string; alt: string } | null>(null);
+  const previewRef = useRef<{ src: string; alt: string } | null>(null);
+  if (previewImage) previewRef.current = previewImage;
 
   const closePreview = useCallback(() => setPreviewImage(null), []);
 
@@ -138,13 +78,35 @@ export function TweetMedia({ items, bleed = false }: Props) {
         </div>
       </div>
 
-      {previewImage && (
-        <ImagePreview
-          src={previewImage.src}
-          alt={previewImage.alt}
-          onClose={closePreview}
-        />
-      )}
+      <Modal open={!!previewImage} onClose={closePreview} className="flex items-center justify-center bg-black/80">
+        {(closing) => {
+          const img = previewRef.current;
+          if (!img) return null;
+          return (
+            <>
+              <button
+                onClick={closePreview}
+                aria-label="Close preview"
+                className={cn(
+                  "absolute right-4 top-4 z-10 flex size-10 cursor-pointer items-center justify-center rounded-full bg-black/60 text-white transition-colors hover:bg-black/80",
+                  closing ? "animate-overlay-out" : "animate-overlay-in",
+                )}
+              >
+                <X size={20} />
+              </button>
+              <img
+                src={img.src}
+                alt={img.alt}
+                className={cn(
+                  "max-h-[90vh] max-w-[90vw] object-contain",
+                  closing ? "animate-preview-out" : "animate-preview-in",
+                )}
+                onClick={(e) => e.stopPropagation()}
+              />
+            </>
+          );
+        }}
+      </Modal>
     </>
   );
 }

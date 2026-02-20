@@ -53,7 +53,7 @@ export function TweetRecommendations({ relatedBookmarks, onOpenBookmark, onShuff
                 <p className="truncate text-xs font-semibold text-x-text">
                   {related.author.name}
                 </p>
-                <p className="truncate text-[11px] text-x-text-secondary">
+                <p className="truncate text-xs text-x-text-secondary">
                   @{related.author.screenName}
                 </p>
               </div>

@@ -27,12 +27,12 @@ We didn't have the `declarativeNetRequest` rule. Without `Origin: https://x.com`
 
 ### Components
 
-#### 1. Content Script (`src/content/detect-user.ts`)
+#### 1. Content Script (`public/content/detect-user.js`)
 - Runs at `document_start` on `https://x.com/*`
 - Reads `twid` cookie → extracts user ID
 - Stores `current_user_id` in `chrome.storage.local`
 
-#### 2. Background Service Worker (`src/background/service-worker.ts`)
+#### 2. Background Service Worker (`public/service-worker.js`)
 - `chrome.webRequest.onSendHeaders` — captures auth headers from x.com GraphQL requests
 - `chrome.runtime.onMessage` — handles FETCH_BOOKMARKS, CHECK_STATUS messages
 - Makes actual API calls (can set Cookie header unlike extension pages)
@@ -73,31 +73,51 @@ We didn't have the `declarativeNetRequest` rule. Without `Origin: https://x.com`
 x-bookmarks-tab/
 ├── public/
 │   ├── manifest.json
-│   └── rules.json              ← declarativeNetRequest: Origin header
-├── src/
-│   ├── main.tsx                ← React entry
-│   ├── App.tsx                 ← Main app with onboarding + bookmarks
-│   ├── index.css               ← Tailwind
-│   ├── background/
-│   │   └── service-worker.ts   ← Auth interception + API calls
+│   ├── rules.json              ← declarativeNetRequest: Origin header
+│   ├── service-worker.js       ← Auth interception + API calls + GraphQL catalog
 │   ├── content/
-│   │   └── detect-user.ts      ← Read twid cookie
+│   │   └── detect-user.js      ← Read twid cookie
+│   └── wallpapers/             ← Built-in wallpaper images
+├── src/
+│   ├── main.tsx                ← React entry (new tab)
+│   ├── popup.tsx               ← React entry (popup)
+│   ├── App.tsx                 ← Main app with onboarding + bookmarks
+│   ├── PopupApp.tsx            ← Extension popup app
+│   ├── index.css               ← Tailwind
 │   ├── api/
-│   │   ├── twitter.ts          ← Bookmark fetching via message passing
-│   │   └── features.ts         ← GraphQL feature flags
+│   │   ├── core/
+│   │   │   ├── auth.ts         ← Auth header management
+│   │   │   ├── bookmarks.ts    ← Bookmark fetching via message passing
+│   │   │   ├── posts.ts        ← Post detail fetching
+│   │   │   └── index.ts        ← API barrel export
+│   │   └── parsers.ts          ← Response parsing + normalization
 │   ├── db/
 │   │   └── index.ts            ← IndexedDB wrapper for bookmarks
 │   ├── components/
-│   │   ├── Onboarding.tsx      ← Login detection + sync UI
-│   │   ├── BookmarkCard.tsx    ← Inline tweet reading
-│   │   ├── SearchBar.tsx       ← Search + filter
-│   │   └── SyncProgress.tsx    ← Sync progress indicator
+│   │   ├── BookmarksList.tsx    ← Main bookmarks list view
+│   │   ├── BookmarkReader.tsx   ← Inline tweet/article reader
+│   │   ├── NewTabHome.tsx       ← New tab home layout
+│   │   ├── Onboarding.tsx       ← Login detection + sync UI
+│   │   ├── SearchBar.tsx        ← Search + filter
+│   │   ├── SettingsModal.tsx    ← Settings dialog
+│   │   ├── reader/              ← Tweet/article rendering components
+│   │   └── popup/               ← Popup-specific components
 │   ├── hooks/
-│   │   ├── useBookmarks.ts     ← Fetch + cache + paginate
-│   │   └── useAuth.ts          ← Auth state management
+│   │   ├── useAuth.ts           ← Auth state management
+│   │   ├── useBookmarks.ts      ← Fetch + cache + paginate
+│   │   ├── useContinueReading.ts← Reading progress tracking
+│   │   ├── useSettings.ts       ← User settings
+│   │   ├── useTheme.ts          ← Theme management
+│   │   └── useWallpaper.ts      ← Wallpaper selection
+│   ├── lib/                     ← Shared utilities
+│   │   ├── bookmark-utils.ts    ← Title picking, reading time, etc.
+│   │   ├── reconcile.ts         ← Bookmark merge/sync logic
+│   │   ├── text.ts              ← Text formatting utilities
+│   │   └── time.ts              ← Time formatting
 │   └── types/
-│       └── index.ts            ← TypeScript types
+│       └── index.ts             ← TypeScript types
 ├── newtab.html
+├── popup.html
 ├── vite.config.ts
 ├── tsconfig.json
 └── package.json

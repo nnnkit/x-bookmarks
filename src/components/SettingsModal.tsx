@@ -1,9 +1,9 @@
-import { useEffect, useMemo, useRef, useState } from "react";
-import { useHotkeys } from "react-hotkeys-hook";
+import { useMemo, useState } from "react";
 import { Monitor, Moon, Sun, X } from "@phosphor-icons/react";
 import type { Bookmark, UserSettings } from "../types";
 import type { ThemePreference } from "../hooks/useTheme";
 import { cn } from "../lib/cn";
+import { Modal } from "./Modal";
 
 interface Props {
   open: boolean;
@@ -32,25 +32,8 @@ export function SettingsModal({
   bookmarks,
   onResetLocalData,
 }: Props) {
-  const backdropRef = useRef<HTMLDivElement>(null);
   const [resetting, setResetting] = useState(false);
   const [resetError, setResetError] = useState<string | null>(null);
-  const [visible, setVisible] = useState(false);
-  const [isClosing, setIsClosing] = useState(false);
-
-  useEffect(() => {
-    if (open) {
-      setVisible(true);
-      setIsClosing(false);
-    } else if (visible) {
-      setIsClosing(true);
-    }
-  }, [open]);
-
-  useHotkeys("escape", () => onClose(), {
-    enabled: open,
-    enableOnFormTags: true,
-  }, [onClose]);
 
   const stats = useMemo(() => {
     const uniqueAuthors = new Set<string>();
@@ -89,31 +72,12 @@ export function SettingsModal({
     }
   };
 
-  if (!visible) return null;
-
   return (
-    <div
-      ref={backdropRef}
-      className={cn(
-        "fixed inset-0 z-50 bg-black/50 backdrop-blur-sm",
-        isClosing ? "animate-overlay-out" : "animate-overlay-in",
-      )}
-      role="dialog"
-      aria-modal="true"
-      aria-labelledby="settings-title"
-      onAnimationEnd={() => {
-        if (isClosing) {
-          setVisible(false);
-          setIsClosing(false);
-        }
-      }}
-      onClick={(e) => {
-        if (e.target === backdropRef.current) onClose();
-      }}
-    >
+    <Modal open={open} onClose={onClose} className="bg-black/50 backdrop-blur-sm" ariaLabelledBy="settings-title">
+      {(closing) => (
       <div className={cn(
         "max-w-md mx-auto mt-[15vh] rounded-3xl border border-x-border bg-x-card shadow-2xl",
-        isClosing ? "animate-preview-out" : "animate-preview-in",
+        closing ? "animate-preview-out" : "animate-preview-in",
       )}>
         <div className="flex items-center justify-between px-6 pt-6 pb-4">
           <h2 id="settings-title" className="text-xl font-bold text-x-text">Settings</h2>
@@ -328,7 +292,8 @@ export function SettingsModal({
           </p>
         </div>
       </div>
-    </div>
+      )}
+    </Modal>
   );
 }
 

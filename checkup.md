@@ -19,9 +19,35 @@ Production-readiness review of every folder and file.
 - **`src/lib/time.ts`** → `timeAgo` was defined but never imported. Updated it to match the `formatTimeAgo` behavior needed by BookmarksList (adds "ago" suffix, handles edge cases).
 - **`src/hooks/useWallpaper.ts`** + **`src/lib/gradient.ts`** — Both had identical `simpleHash` functions. Exported from `gradient.ts`, imported in `useWallpaper.ts`.
 
+### Hardcoded font sizes replaced with Tailwind tokens
+- **`src/components/BookmarksList.tsx`** — `text-[10px]` → `text-xs`
+- **`src/components/reader/TweetHeader.tsx`** — `text-[11px]` → `text-xs`
+- **`src/components/reader/TweetRecommendations.tsx`** — `text-[11px]` → `text-xs`
+- **`src/components/reader/utils.ts`** — `text-[0.99rem]` → `text-base`, `leading-[1.75]` → `leading-relaxed`
+
 ### Trailing whitespace / blank lines
 - **`src/lib/bookmark-utils.ts`** — Removed trailing blank line.
 - **`src/lib/time.ts`** — Removed trailing blank line.
+
+### Excessive documentation removed
+- **`changes.md`** — Outdated "Production Readiness Audit" doc referencing non-existent files. Deleted.
+- **`IMPLEMENTATION_DETAILS.md`** — ~1700 lines about how twillot (a different project) works. Not relevant to this codebase. Deleted.
+- **`LINE_BY_LINE_EXPLAINED.md`** — ~930 lines explaining techniques from a different extension. Deleted.
+- **`STORAGE_EXPLAINED.md`** — Explains storage of another project, not this one. Deleted.
+
+### Service worker dev tooling removed
+- **`public/service-worker.js`** — Removed ~110 lines of developer-only GraphQL documentation export tooling:
+  - `formatDateTime()`, `escapeMarkdown()`, `markdownForParam()` — markdown formatting helpers
+  - `buildGraphqlDocsMarkdown()` — generates markdown documentation from captured catalog
+  - `handleGetGraphqlCatalog()` — returns raw catalog data
+  - `handleExportGraphqlDocs()` — generates exportable docs
+  - Removed message handlers for `GET_GRAPHQL_CATALOG` and `EXPORT_GRAPHQL_DOCS`
+  - Kept runtime catalog capture functions (`loadGraphqlCatalog`, `captureGraphqlEndpoint`, etc.) since they serve the auto-adaptation to X API changes.
+
+### ARCHITECTURE.md updated
+- Fixed outdated file paths: `src/background/service-worker.ts` → `public/service-worker.js`, `src/content/detect-user.ts` → `public/content/detect-user.js`
+- Replaced entire File Structure section with accurate tree reflecting current codebase (api/core/, components/reader/, components/popup/, popup entry, etc.)
+- Removed references to non-existent files: `BookmarkCard.tsx`, `SyncProgress.tsx`, `twitter.ts`, `features.ts`
 
 ---
 
@@ -34,20 +60,7 @@ Production-readiness review of every folder and file.
 ### Styling
 - **`src/PopupApp.tsx`** uses inline `style={{ height: 200 }}` and `style={{ maxHeight: 500 }}`. These are for the Chrome extension popup which needs explicit pixel constraints. Tailwind's `h-` scale doesn't map cleanly to popup sizing requirements.
 - **`src/components/popup/PopupBookmarkList.tsx`** uses `style={{ maxHeight: 400 }}` for the same reason.
-- **`src/components/reader/TableOfContents.tsx`** (now deleted) used `text-[11px]` and `text-[13px]` — hardcoded pixel sizes that violated CLAUDE.md styling rules.
 
 ### Documentation
-Root has many markdown files. For a production open-source project, consider:
-- **Keep**: `CHANGELOG.md`, `CLAUDE.md`, `ARCHITECTURE.md` (after updating outdated file paths), `RELEASING.md`
-- **Consider removing**: `changes.md`, `IMPLEMENTATION_DETAILS.md`, `LINE_BY_LINE_EXPLAINED.md`, `STORAGE_EXPLAINED.md`, `soul.md` — these read as internal dev notes rather than user/contributor-facing docs
+- **Kept**: `CHANGELOG.md`, `CLAUDE.md`, `ARCHITECTURE.md`, `RELEASING.md`, `soul.md` (product direction)
 - **Missing**: A `README.md` with project description, install instructions, and screenshots
-
-### ARCHITECTURE.md is outdated
-References files that no longer exist:
-- `src/background/service-worker.ts` → actual location is `public/service-worker.js`
-- `src/content/detect-user.ts` → actual location is `public/content/detect-user.js`
-- `src/components/BookmarkCard.tsx` → does not exist
-- `src/components/SyncProgress.tsx` → does not exist
-
-### Service worker
-- `public/service-worker.js` is plain JavaScript (~1258 lines). Contains GraphQL catalog capture/export functionality (`handleGetGraphqlCatalog`, `handleExportGraphqlDocs`, `buildGraphqlDocsMarkdown`) that appears to be developer tooling rather than user-facing features. Consider extracting or removing if not needed in production.

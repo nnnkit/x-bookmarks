@@ -41,7 +41,7 @@ export function escapeHtml(text: string): string {
 export function textClassForMode(
   compact = false,
 ): string {
-  return cn(baseTweetTextClass, "text-x-text", compact ? "text-[0.99rem] leading-7" : "text-lg leading-[1.75]");
+  return cn(baseTweetTextClass, "text-x-text", compact ? "text-base leading-7" : "text-lg leading-relaxed");
 }
 
 export function kindPillClass(kind: TweetKind): string {

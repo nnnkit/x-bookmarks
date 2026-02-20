@@ -12,7 +12,7 @@ interface TweetKindPillProps {
 function TweetKindPill({ kind }: TweetKindPillProps) {
   return (
     <span
-      className={cn("inline-flex items-center rounded-full border px-2.5 py-1 text-[11px] font-medium", kindPillClass(kind))}
+      className={cn("inline-flex items-center rounded-full border px-2.5 py-1 text-xs font-medium", kindPillClass(kind))}
     >
       {KIND_LABEL[kind]}
     </span>
