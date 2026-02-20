@@ -169,7 +169,7 @@ interface AffiliateBadgeProps {
 
 function AffiliateBadge({ affiliate }: AffiliateBadgeProps) {
   const content = (
-    <span className="inline-flex items-center gap-1 text-sm text-x-text-secondary">
+    <span className="inline-flex items-center gap-1 text-xs text-x-text-secondary">
       {affiliate.badgeUrl && (
         <img
           src={affiliate.badgeUrl}
@@ -240,13 +240,13 @@ export function TweetHeader({ author, displayKind, readingMinutes }: Props) {
             loading="lazy"
           />
         </button>
-        <div className="min-w-0">
+        <div className="min-h-12 min-w-0">
           <div className="flex items-center gap-1.5">
             <a
               href={authorUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className="truncate font-bold text-x-text hover:underline"
+              className="truncate text-base font-bold text-x-text hover:underline"
             >
               {author.name}
             </a>
@@ -255,7 +255,7 @@ export function TweetHeader({ author, displayKind, readingMinutes }: Props) {
               <AffiliateBadge affiliate={author.affiliate} />
             )}
           </div>
-          <div className="flex items-center gap-1 text-sm text-x-text-secondary">
+          <div className="flex items-center gap-1 text-xs text-x-text-secondary">
             <a
               href={authorUrl}
               target="_blank"
@@ -274,13 +274,13 @@ export function TweetHeader({ author, displayKind, readingMinutes }: Props) {
             )}
           </div>
           {author.bio && (
-            <p className="mt-0.5 line-clamp-1 text-sm text-x-text-secondary">
+            <p className="mt-0.5 line-clamp-1 text-xs text-x-text-secondary">
               {author.bio}
             </p>
           )}
         </div>
         {readingMinutes != null && (
-          <span className="ml-auto shrink-0 text-sm text-x-text-secondary">
+          <span className="ml-auto shrink-0 text-xs text-x-text-secondary">
             {readingMinutes} min read
           </span>
         )}

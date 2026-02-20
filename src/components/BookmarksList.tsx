@@ -39,10 +39,12 @@ export function BookmarksList({
 }: Props) {
   const containerWidthClass = "max-w-3xl";
   const [focusedIndex, setFocusedIndex] = useState(-1);
+  const [slideDirection, setSlideDirection] = useState<"left" | "right" | null>(null);
   const [prevActiveTab, setPrevActiveTab] = useState(activeTab);
   if (prevActiveTab !== activeTab) {
     setPrevActiveTab(activeTab);
     setFocusedIndex(-1);
+    setSlideDirection(activeTab === "unread" ? "right" : "left");
   }
   const itemRefs = useRef<(HTMLButtonElement | null)[]>([]);
 
@@ -177,6 +179,13 @@ export function BookmarksList({
       </div>
 
       <main className={cn(containerWidthClass, "mx-auto px-4 pb-16 pt-6")}>
+        <div
+          key={activeTab}
+          className={cn(
+            slideDirection === "right" && "animate-tab-slide-right",
+            slideDirection === "left" && "animate-tab-slide-left",
+          )}
+        >
         {activeTab === "continue" && (
           <>
             {inProgress.length > 0 && (
@@ -316,6 +325,7 @@ export function BookmarksList({
             )}
           </>
         )}
+        </div>
       </main>
     </div>
   );
