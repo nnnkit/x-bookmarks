@@ -83,8 +83,10 @@ export function useBookmarks(isReady: boolean): UseBookmarksReturn {
         if (cancelled) return;
         if (stored.length > 0) {
           setBookmarks(stored);
+          setSyncState({ phase: "done", total: stored.length });
+        } else {
+          syncNewBookmarks({ fullReconcile: true });
         }
-        setSyncState({ phase: "done", total: stored.length });
       })
       .catch(() => {
         if (cancelled) return;

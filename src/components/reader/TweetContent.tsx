@@ -191,7 +191,7 @@ interface Props {
   onOpenBookmark: (bookmark: Bookmark) => void;
   onShuffle?: () => void;
   tweetSectionIdPrefix?: string;
-  onMarkAsRead?: () => void;
+  onToggleRead?: () => void;
   isMarkedRead?: boolean;
 }
 
@@ -205,7 +205,7 @@ export function TweetContent({
   onOpenBookmark,
   onShuffle,
   tweetSectionIdPrefix,
-  onMarkAsRead,
+  onToggleRead,
   isMarkedRead,
 }: Props) {
   const viewOnXUrl = `https://x.com/${displayBookmark.author.screenName}/status/${displayBookmark.tweetId}`;
@@ -227,7 +227,7 @@ export function TweetContent({
         <TweetLinks
           urls={[]}
           viewOnXUrl={viewOnXUrl}
-          onMarkAsRead={onMarkAsRead}
+          onToggleRead={onToggleRead}
           isMarkedRead={isMarkedRead}
         />
       </div>

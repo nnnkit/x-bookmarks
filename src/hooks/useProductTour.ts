@@ -31,24 +31,21 @@ export function useProductTour({ enabled, hasBookmarks }: Props) {
         element: '[data-tour="open-all-btn"]',
         popover: {
           title: "All bookmarks",
-          description:
-            'Press <kbd>L</kbd> to see all your saved bookmarks',
+          description: "Press <kbd>L</kbd> to see all your saved bookmarks",
         },
       },
       {
         element: '[data-tour="surprise-btn"]',
         popover: {
           title: "Surprise me",
-          description:
-            "Press <kbd>S</kbd> to open a random bookmark",
+          description: "Press <kbd>S</kbd> to open a random bookmark",
         },
       },
       {
         element: '[data-tour="settings-btn"]',
         popover: {
           title: "Settings",
-          description:
-            "Customize your theme, search bar, and quick links",
+          description: "Customize your theme, search bar, and quick links",
         },
       },
     ];

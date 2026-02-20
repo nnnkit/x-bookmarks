@@ -233,6 +233,15 @@ export async function markReadingProgressCompleted(tweetId: string): Promise<voi
   }
 }
 
+export async function markReadingProgressUncompleted(tweetId: string): Promise<void> {
+  if (!tweetId) return;
+  const db = await getDb();
+  const existing = await db.get(PROGRESS_STORE_NAME, tweetId);
+  if (existing) {
+    await db.put(PROGRESS_STORE_NAME, { ...existing, lastReadAt: Date.now(), completed: false });
+  }
+}
+
 export async function getReadingProgress(
   tweetId: string,
 ): Promise<ReadingProgress | null> {

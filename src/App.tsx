@@ -4,7 +4,7 @@ import { useBookmarks, useDetailedTweetIds } from "./hooks/useBookmarks";
 import { useTheme } from "./hooks/useTheme";
 import { useSettings } from "./hooks/useSettings";
 import { useKeyboardNavigation } from "./hooks/useKeyboard";
-import { ensureReadingProgressExists, markReadingProgressCompleted } from "./db";
+import { ensureReadingProgressExists, markReadingProgressCompleted, markReadingProgressUncompleted } from "./db";
 import { pickRelatedBookmarks } from "./lib/related";
 import { resetLocalData } from "./lib/reset";
 import { Onboarding } from "./components/Onboarding";
@@ -155,6 +155,7 @@ export default function App() {
           themePreference={themePreference}
           onThemeChange={setThemePreference}
           onMarkAsRead={markReadingProgressCompleted}
+          onMarkAsUnread={markReadingProgressUncompleted}
         />
       );
     }
@@ -175,6 +176,8 @@ export default function App() {
     return (
       <NewTabHome
         bookmarks={bookmarks}
+        syncState={syncState}
+        onSync={refresh}
         detailedTweetIds={detailedTweetIds}
         showTopSites={settings.showTopSites}
         showSearchBar={settings.showSearchBar}

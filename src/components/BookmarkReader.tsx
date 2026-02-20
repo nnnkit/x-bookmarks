@@ -22,6 +22,7 @@ interface Props {
   themePreference: ThemePreference;
   onThemeChange: (pref: ThemePreference) => void;
   onMarkAsRead?: (tweetId: string) => void;
+  onMarkAsUnread?: (tweetId: string) => void;
 }
 
 export function BookmarkReader({
@@ -36,8 +37,9 @@ export function BookmarkReader({
   themePreference,
   onThemeChange,
   onMarkAsRead,
+  onMarkAsUnread,
 }: Props) {
-  const [isMarkedRead, setIsMarkedRead] = useState(false);
+  const [readOverride, setReadOverride] = useState<boolean | null>(null);
   const [resolvedBookmark, setResolvedBookmark] = useState<Bookmark | null>(
     null,
   );
@@ -48,7 +50,7 @@ export function BookmarkReader({
     tweetId: bookmark.tweetId,
     contentReady: !detailLoading,
   });
-  const effectiveMarkedRead = isMarkedRead || isCompleted;
+  const effectiveMarkedRead = readOverride ?? isCompleted;
 
   useEffect(() => {
     let cancelled = false;
@@ -200,9 +202,14 @@ export function BookmarkReader({
           relatedBookmarks={relatedBookmarks}
           onOpenBookmark={onOpenBookmark}
           onShuffle={onShuffle}
-          onMarkAsRead={onMarkAsRead ? () => {
-            onMarkAsRead(bookmark.tweetId);
-            setIsMarkedRead(true);
+          onToggleRead={onMarkAsRead ? () => {
+            if (effectiveMarkedRead) {
+              onMarkAsUnread?.(bookmark.tweetId);
+              setReadOverride(false);
+            } else {
+              onMarkAsRead(bookmark.tweetId);
+              setReadOverride(true);
+            }
           } : undefined}
           isMarkedRead={effectiveMarkedRead}
         />

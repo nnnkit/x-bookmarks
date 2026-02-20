@@ -79,30 +79,30 @@ function LinkCards({ urls }: LinkCardsProps) {
   );
 }
 
-interface MarkAsReadButtonProps {
-  onMarkAsRead: () => void;
-  isMarkedRead: boolean;
+interface ReadStatusButtonProps {
+  onToggle: () => void;
+  isRead: boolean;
 }
 
-function MarkAsReadButton({
-  onMarkAsRead,
-  isMarkedRead,
-}: MarkAsReadButtonProps) {
+function ReadStatusButton({ onToggle, isRead }: ReadStatusButtonProps) {
   return (
     <button
       type="button"
-      onClick={onMarkAsRead}
-      disabled={isMarkedRead}
+      onClick={onToggle}
       className={
-        isMarkedRead
-          ? "inline-flex items-center gap-1.5 rounded-full border border-green-500/30 bg-green-500/10 px-3 py-1.5 text-xs font-medium text-green-600 dark:text-green-400"
+        isRead
+          ? "inline-flex items-center gap-1.5 rounded-full border border-green-500/30 bg-green-500/10 px-3 py-1.5 text-xs font-medium text-green-600 transition-colors hover:border-green-500/50 hover:bg-green-500/20 dark:text-green-400"
           : "inline-flex items-center gap-1.5 rounded-full border border-x-border bg-x-card px-3 py-1.5 text-xs font-medium text-x-text-secondary transition-colors hover:bg-x-hover hover:text-x-text"
       }
     >
       <svg viewBox="0 0 24 24" className="size-3.5" fill="currentColor">
-        <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z" />
+        {isRead ? (
+          <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z" />
+        ) : (
+          <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z" />
+        )}
       </svg>
-      {isMarkedRead ? "Marked as read" : "Mark as read"}
+      {isRead ? "Read" : "Mark as read"}
     </button>
   );
 }
@@ -110,14 +110,14 @@ function MarkAsReadButton({
 interface Props {
   urls: TweetUrl[];
   viewOnXUrl?: string;
-  onMarkAsRead?: () => void;
+  onToggleRead?: () => void;
   isMarkedRead?: boolean;
 }
 
 export function TweetLinks({
   urls,
   viewOnXUrl,
-  onMarkAsRead,
+  onToggleRead,
   isMarkedRead,
 }: Props) {
   const resolvedUrls: ResolvedUrl[] = urls.flatMap((url) => {
@@ -128,10 +128,10 @@ export function TweetLinks({
     ];
   });
 
-  const markAsReadBtn = onMarkAsRead ? (
-    <MarkAsReadButton
-      onMarkAsRead={onMarkAsRead}
-      isMarkedRead={isMarkedRead ?? false}
+  const readStatusBtn = onToggleRead ? (
+    <ReadStatusButton
+      onToggle={onToggleRead}
+      isRead={isMarkedRead ?? false}
     />
   ) : null;
 
@@ -149,7 +149,7 @@ export function TweetLinks({
     </a>
   ) : null;
 
-  const hasActions = markAsReadBtn || viewOnXLink;
+  const hasActions = readStatusBtn || viewOnXLink;
 
   return (
     <>
@@ -157,7 +157,7 @@ export function TweetLinks({
       {hasActions && (
         <div className="mt-5 flex items-center">
           {viewOnXLink}
-          {markAsReadBtn && <div className="ml-auto">{markAsReadBtn}</div>}
+          {readStatusBtn && <div className="ml-auto">{readStatusBtn}</div>}
         </div>
       )}
     </>

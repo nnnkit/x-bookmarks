@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useHotkeys } from "react-hotkeys-hook";
-import type { BackgroundMode, Bookmark } from "../types";
+import type { BackgroundMode, Bookmark, SyncState } from "../types";
 import { formatClock } from "../lib/time";
 import {
   pickTitle,
@@ -14,6 +14,8 @@ import { useProductTour } from "../hooks/useProductTour";
 
 interface Props {
   bookmarks: Bookmark[];
+  syncState: SyncState;
+  onSync: () => void;
   detailedTweetIds: Set<string>;
   showTopSites: boolean;
   showSearchBar: boolean;
@@ -76,6 +78,8 @@ const GOOGLE_LOGO = (
 
 export function NewTabHome({
   bookmarks,
+  syncState,
+  onSync,
   detailedTweetIds,
   showTopSites,
   showSearchBar,
@@ -330,19 +334,58 @@ export function NewTabHome({
                 </button>
               </div>
             </div>
+          ) : syncState.phase === "syncing" ? (
+            <article className="breath-card text-center">
+              <p className="breath-eyebrow">Syncing your bookmarks&hellip;</p>
+              <div className="mt-4 flex justify-center">
+                <svg
+                  viewBox="0 0 24 24"
+                  className="size-6 animate-spin text-x-blue"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth={2}
+                >
+                  <path
+                    d="M12 2a10 10 0 0 1 10 10"
+                    strokeLinecap="round"
+                  />
+                </svg>
+              </div>
+              <p className="breath-empty mt-4 text-pretty">
+                Fetching bookmarks from your account. This may take a moment.
+              </p>
+            </article>
+          ) : syncState.phase === "error" ? (
+            <article className="breath-card text-center">
+              <p className="breath-eyebrow">Something went wrong</p>
+              <p className="breath-empty mt-4 text-pretty">
+                {syncState.error === "reconnecting"
+                  ? "Reconnecting to your account\u2026"
+                  : "Could not sync your bookmarks. Check your connection and try again."}
+              </p>
+              {syncState.error !== "reconnecting" && (
+                <button
+                  type="button"
+                  onClick={onSync}
+                  className="breath-btn breath-btn--primary mt-6"
+                >
+                  Try again
+                </button>
+              )}
+            </article>
           ) : (
             <article className="breath-card text-center">
               <p className="breath-eyebrow">Your reading list is quiet</p>
               <p className="breath-empty mt-4 text-pretty">
-                Sync your bookmarks from the reading view, and this tab will
-                gently surface what to read next.
+                No bookmarks found. Bookmark some posts on X, then sync to see
+                them here.
               </p>
               <button
                 type="button"
-                onClick={onOpenReading}
+                onClick={onSync}
                 className="breath-btn breath-btn--primary mt-6"
               >
-                Open reading view
+                Sync bookmarks
               </button>
             </article>
           )}
