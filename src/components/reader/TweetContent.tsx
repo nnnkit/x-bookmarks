@@ -22,6 +22,16 @@ interface TweetBodyProps {
   sectionIdPrefix?: string;
 }
 
+function stripCardUrls(text: string, urls: { url: string; expandedUrl: string }[]): string {
+  if (urls.length === 0) return text;
+  let result = text;
+  for (const u of urls) {
+    if (u.url) result = result.replaceAll(u.url, "");
+    if (u.expandedUrl) result = result.replaceAll(u.expandedUrl, "");
+  }
+  return result.replace(/\n+$/, "").trimEnd();
+}
+
 function TweetBody({ tweet, compact = false, sectionIdPrefix }: TweetBodyProps) {
   const kind = resolveTweetKind(tweet);
 
@@ -77,11 +87,13 @@ function TweetBody({ tweet, compact = false, sectionIdPrefix }: TweetBodyProps) 
     hasArticle && (isArticleKind || !textMatchesArticle || hasArticleBlocks);
   const showText = !((isArticleKind || hasArticleBlocks) && textMatchesArticle);
 
+  const displayText = stripCardUrls(tweet.text, tweet.urls);
+
   return (
     <>
       {showText && (
         <RichTextBlock
-          text={tweet.text}
+          text={displayText}
           compact={compact}
           style="tweet"
           sectionIdPrefix={sectionIdPrefix}

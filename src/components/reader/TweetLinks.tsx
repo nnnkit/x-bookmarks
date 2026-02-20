@@ -17,24 +17,24 @@ function LinkPreviewCard({ url, card }: LinkPreviewCardProps) {
       href={url.href}
       target="_blank"
       rel="noopener noreferrer"
-      className="flex items-center gap-3 overflow-hidden rounded-lg border border-x-border bg-x-link-card px-3 py-2.5 transition-colors hover:bg-x-hover"
+      className="flex overflow-hidden rounded-xl border border-x-border bg-x-link-card transition-colors hover:bg-x-hover"
     >
       {card.imageUrl && (
         <img
           src={card.imageUrl}
           alt={card.imageAlt || card.title || ""}
-          className="w-14 shrink-0 rounded"
+          className="size-28 shrink-0 object-cover"
         />
       )}
-      <div className="min-w-0">
-        <span className="block truncate text-xs text-x-text-secondary">
+      <div className="flex min-w-0 flex-col justify-center px-3 py-2.5">
+        <span className="truncate text-xs text-x-text-secondary">
           {card.domain || url.displayUrl}
         </span>
-        <span className="mt-0.5 block text-xs font-medium text-x-text line-clamp-1">
+        <span className="mt-0.5 text-sm font-medium text-x-text line-clamp-1">
           {card.title}
         </span>
         {card.description && (
-          <span className="mt-0.5 block text-xs text-x-text-secondary line-clamp-1">
+          <span className="mt-0.5 text-xs text-x-text-secondary line-clamp-2">
             {card.description}
           </span>
         )}
