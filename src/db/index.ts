@@ -162,9 +162,10 @@ export async function getBookmarkCount(): Promise<number> {
 
 export async function clearBookmarks(): Promise<void> {
   const db = await getDb();
-  const tx = db.transaction([STORE_NAME, PROGRESS_STORE_NAME], "readwrite");
+  const tx = db.transaction([STORE_NAME, PROGRESS_STORE_NAME, HIGHLIGHTS_STORE_NAME], "readwrite");
   tx.objectStore(STORE_NAME).clear();
   tx.objectStore(PROGRESS_STORE_NAME).clear();
+  tx.objectStore(HIGHLIGHTS_STORE_NAME).clear();
   await tx.done;
 }
 
@@ -352,14 +353,6 @@ export async function getDetailedTweetIds(): Promise<Set<string>> {
   return new Set(keys);
 }
 
-export async function getHighlightsForTweet(
-  tweetId: string,
-): Promise<Highlight[]> {
-  if (!tweetId) return [];
-  const db = await getDb();
-  return db.getAllFromIndex(HIGHLIGHTS_STORE_NAME, "tweetId", tweetId);
-}
-
 export async function upsertHighlight(highlight: Highlight): Promise<void> {
   const db = await getDb();
   await db.put(HIGHLIGHTS_STORE_NAME, highlight);
@@ -371,6 +364,12 @@ export async function deleteHighlight(id: string): Promise<void> {
   await db.delete(HIGHLIGHTS_STORE_NAME, id);
 }
 
+export async function getHighlightsByTweetId(tweetId: string): Promise<Highlight[]> {
+  if (!tweetId) return [];
+  const db = await getDb();
+  return db.getAllFromIndex(HIGHLIGHTS_STORE_NAME, "tweetId", tweetId);
+}
+
 export async function deleteHighlightsForTweet(tweetId: string): Promise<void> {
   if (!tweetId) return;
   const db = await getDb();
@@ -380,6 +379,22 @@ export async function deleteHighlightsForTweet(tweetId: string): Promise<void> {
   for (const key of keys) {
     await tx.store.delete(key as string);
   }
+  await tx.done;
+}
+
+export async function deleteHighlightsByTweetIds(tweetIds: string[]): Promise<void> {
+  if (tweetIds.length === 0) return;
+  const db = await getDb();
+  const tx = db.transaction(HIGHLIGHTS_STORE_NAME, "readwrite");
+  const index = tx.store.index("tweetId");
+
+  for (const tweetId of tweetIds) {
+    const keys = await index.getAllKeys(IDBKeyRange.only(tweetId));
+    for (const key of keys) {
+      await tx.store.delete(key as string);
+    }
+  }
+
   await tx.done;
 }
 

@@ -354,6 +354,19 @@
         animation: highlight-flash 600ms ease-out forwards;
     }
 
+    .xbt-note-star {
+        position: absolute;
+        right: -2rem;
+        cursor: pointer;
+        color: var(--highlight-bg-hover);
+        transition: color 150ms ease;
+        line-height: 1;
+    }
+
+    .xbt-note-star:hover {
+        color: #d97706;
+    }
+
     button:active:not(:disabled):not([role="switch"]),
     a[role="button"]:active:not(:disabled) {
         transform: scale(0.97);
@@ -862,6 +875,9 @@
         transition: none;
     }
 
+    mark.xbt-highlight-new {
+        animation: none;
+    }
 }
 
 .xbt-tour-popover {

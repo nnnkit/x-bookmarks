@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   ArrowLeft,
   BookmarkSimple,
@@ -8,14 +8,18 @@ import {
   Moon,
   Sun,
 } from "@phosphor-icons/react";
-import type { Bookmark, ThreadTweet } from "../types";
+import type { Bookmark, Highlight, ThreadTweet } from "../types";
 import type { ThemePreference } from "../hooks/useTheme";
 import { fetchTweetDetail } from "../api/core/posts";
 import { cn } from "../lib/cn";
 
 import { resolveTweetKind } from "./reader/utils";
 import { TweetContent } from "./reader/TweetContent";
+import { SelectionToolbar } from "./reader/SelectionToolbar";
+import { HighlightPopover } from "./reader/HighlightPopover";
 import { useReadingProgress } from "../hooks/useReadingProgress";
+import { useSelectionToolbar } from "../hooks/useSelectionToolbar";
+import { useHighlights } from "../hooks/useHighlights";
 
 const THEME_CYCLE: ThemePreference[] = ["system", "light", "dark"];
 
@@ -101,6 +105,49 @@ export function BookmarkReader({
       cancelled = true;
     };
   }, [bookmark.tweetId, bookmark.sortIndex]);
+
+  const { addHighlight, removeHighlight, updateHighlightNote, getHighlight } =
+    useHighlights({
+      tweetId: bookmark.tweetId,
+      contentReady: !detailLoading,
+      containerRef: articleRef,
+    });
+
+  const { toolbarState, dismiss: dismissToolbar } =
+    useSelectionToolbar(articleRef);
+
+  const [popoverState, setPopoverState] = useState<{
+    highlight: Highlight;
+    position: { x: number; y: number };
+  } | null>(null);
+
+  const handleArticleClick = useCallback(
+    (e: React.MouseEvent) => {
+      const target = e.target as HTMLElement;
+
+      const mark = target.closest("mark.xbt-highlight") as HTMLElement | null;
+      const star = target.closest(".xbt-note-star") as HTMLElement | null;
+
+      const el = star || mark;
+      if (!el) return;
+
+      const highlightId = el.dataset.highlightId;
+      if (!highlightId) return;
+
+      const highlight = getHighlight(highlightId);
+      if (!highlight) return;
+
+      const rect = el.getBoundingClientRect();
+      setPopoverState({
+        highlight,
+        position: {
+          x: rect.left + rect.width / 2,
+          y: rect.bottom,
+        },
+      });
+    },
+    [getHighlight],
+  );
 
   const displayBookmark = resolvedBookmark || bookmark;
   const displayKind = useMemo(
@@ -196,6 +243,7 @@ export function BookmarkReader({
       <article
         ref={articleRef}
         className={cn(containerWidthClass, "relative mx-auto px-5 pb-16 pt-6")}
+        onClick={handleArticleClick}
       >
         <TweetContent
           displayBookmark={displayBookmark}
@@ -206,6 +254,7 @@ export function BookmarkReader({
           relatedBookmarks={relatedBookmarks}
           onOpenBookmark={onOpenBookmark}
           onShuffle={onShuffle}
+          tweetSectionIdPrefix="section-tweet"
           onToggleRead={onMarkAsRead ? () => {
             if (effectiveMarkedRead) {
               onMarkAsUnread?.(bookmark.tweetId);
@@ -218,6 +267,34 @@ export function BookmarkReader({
           isMarkedRead={effectiveMarkedRead}
         />
       </article>
+
+      {toolbarState && (
+        <SelectionToolbar
+          position={toolbarState.position}
+          ranges={toolbarState.ranges}
+          onHighlight={(ranges, note) => {
+            addHighlight(ranges, note);
+            dismissToolbar();
+          }}
+          onDismiss={dismissToolbar}
+        />
+      )}
+
+      {popoverState && (
+        <HighlightPopover
+          highlight={popoverState.highlight}
+          position={popoverState.position}
+          onDelete={(id) => {
+            removeHighlight(id);
+            setPopoverState(null);
+          }}
+          onUpdateNote={(id, note) => {
+            updateHighlightNote(id, note);
+            setPopoverState(null);
+          }}
+          onDismiss={() => setPopoverState(null)}
+        />
+      )}
     </div>
   );
 }

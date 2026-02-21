@@ -178,3 +178,14 @@ export interface UserSettings {
   topSitesLimit: number;
   backgroundMode: BackgroundMode;
 }
+
+export interface Highlight {
+  id: string;
+  tweetId: string;
+  sectionId: string;
+  startOffset: number;
+  endOffset: number;
+  selectedText: string;
+  note: string | null;
+  createdAt: number;
+}
